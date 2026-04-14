@@ -19,6 +19,7 @@ Hermes Shadow Stats treats a Hermes home/profile as a persistent character save 
 - JSON export
 - richer growth heuristics from artifact content, not just file counts
 - Hermes plugin prototype wrapper
+- preview export script for SVG/PNG generation
 
 ## MVP goals
 
@@ -105,6 +106,22 @@ Custom name:
 hermes-shadow-stats --name "Hermes of Ashes"
 ```
 
+## Preview export flow
+
+Generate a local SVG and try to render a PNG preview:
+
+```bash
+./scripts/export_preview.sh
+```
+
+Custom output paths:
+
+```bash
+./scripts/export_preview.sh ./artifacts/shadow-card.svg ./artifacts/shadow-card.png
+```
+
+On macOS the script uses `qlmanage`. On Linux it falls back to `rsvg-convert` or `inkscape` if available.
+
 ## Hermes plugin prototype
 
 A prototype wrapper is included in `hermes_plugin/`.
@@ -117,6 +134,8 @@ See:
 - `docs/design.md` — field design, derivation logic, and future direction
 - `docs/plugin-prototype.md` — Hermes plugin wrapper sketch
 - `docs/release-checklist.md` — what to finish before first public push/release
+- `examples/README.md` — how to manage shareable sample outputs
+- `CHANGELOG.md` — lightweight change log
 
 ## Release polish included
 
@@ -125,11 +144,15 @@ This repo now includes a small release-prep layer:
 - `.gitignore`
 - clearer README usage examples
 - SVG export path support via `--output`
+- preview generation script
 - release checklist doc
+- CI workflow for pytest
+- changelog scaffold
 
 ## Suggested next steps
 
-- render the SVG to PNG in CI or via helper script
+- add a stable synthetic demo profile for public examples
+- render the SVG to PNG in CI or via a Python helper instead of shell-only fallbacks
 - parse session structures more deeply instead of keyword heuristics
 - add themed badges / portrait / emblem mode
 - add live hook-based progression journal
