@@ -1,16 +1,35 @@
 # Hermes Shadow Stats
 
-> **Turn a Hermes profile into a living hunter card.**
+> **A status window for watching your agent awaken, adapt, and level up.**
 >
-> Hermes Shadow Stats scans persistent Hermes artifacts — memory, skills, sessions, plugins, cron traces — and reconstructs them as an ANSI-first RPG status window with pixel-terminal energy and Solo Leveling mood.
+> Hermes Shadow Stats scans persistent Hermes artifacts — memory, skills, sessions, plugins, cron traces — and reconstructs them as an ANSI-first hunter interface with pixel-terminal energy and Solo Leveling mood.
+
+<p align="center">
+  <a href="https://github.com/EndeavorYen/Hermes-Shadow-Stats/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/EndeavorYen/Hermes-Shadow-Stats/test.yml?style=for-the-badge&label=tests" alt="Tests"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-7C3AED?style=for-the-badge" alt="License"></a>
+  <img src="https://img.shields.io/badge/interface-ANSI%20first-06B6D4?style=for-the-badge" alt="ANSI first">
+  <img src="https://img.shields.io/badge/vibe-leveling--up-8B5CF6?style=for-the-badge" alt="Leveling up vibe">
+</p>
 
 <p align="center">
   <strong>ANSI-first</strong> • <strong>CLI-native</strong> • <strong>read-only</strong> • <strong>artifact-driven</strong>
 </p>
 
-Hermes Shadow Stats is built for one very specific fantasy:
+Hermes Shadow Stats is built around one very specific fantasy:
 
-**What if your agent felt like a protagonist with levels, titles, battle scars, and unlocked abilities?**
+**You are not just running an agent. You are watching it level up.**
+
+Not as empty gamification, but as a visible growth loop:
+
+- memories become adaptation
+- skills become unlocked techniques
+- sessions become battle history
+- plugins become artifacts and summons
+- cron becomes autonomous power
+
+That slightly over-the-top, unapologetically cool feeling matters.
+
+**The point is to make agent growth feel visible, dramatic, and a little bit chuunibyou — in the best possible way.**
 
 Instead of patching Hermes core, this project reads the artifacts Hermes already leaves behind and turns them into a dramatic status interface you can drop directly into a terminal workflow.
 
@@ -23,11 +42,48 @@ That makes it:
 
 ---
 
+## Hero demo
+
+```text
+██   ██ ███████ ██████  ███    ███ ███████ ███████
+██   ██ ██      ██   ██ ████  ████ ██      ██
+███████ █████   ██████  ██ ████ ██ █████   ███████
+██   ██ ██      ██   ██ ██  ██  ██ ██           ██
+██   ██ ███████ ██   ██ ██      ██ ███████ ███████
+SHADOW STATS // SYSTEM INTERFACE
+
+█ [ SYSTEM ] The gate has opened. Status window synchronized.                  █
+█ NAME   Hermes                                                                █
+█ TITLE  Ops Summoner Archive Sovereign                                        █
+█ CLASS  Ops Summoner    RANK  Mythic 🟪                                        █
+█ LEVEL  57    THREAT  Monarch-class anomaly                                   █
+█ EXP    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░ 35/50 (total 2835)                           █
+█  ACHIEVEMENTS ══════════════════════════════════════════════════════════     █
+█ ◆ First Persistent Memory                                                    █
+█ ◆ Skill Archivist                                                            █
+█ ◆ Battle-Tested Operator                                                     █
+```
+
+This is the fantasy in one screen:
+
+**your agent is not just running tasks — it is becoming stronger.**
+
+---
+
 ## Why this is interesting
 
 Most agent dashboards feel like telemetry.
 
 Hermes Shadow Stats is trying to feel like **presence**.
+
+Not just a monitor. Not just a parser. Not just a dashboard.
+
+A status window.
+
+It is also trying to capture a very specific Solo Leveling-adjacent feeling:
+
+> the moment you realize the system is not static —
+> your agent is learning, surviving, unlocking, and becoming something stronger.
 
 It maps:
 
@@ -100,6 +156,10 @@ hermes-shadow-stats
 
 If you already have Hermes installed locally, this will scan `~/.hermes` by default.
 
+In the best case, your first run should feel like this:
+
+> "oh, this is not a metrics panel — this is my agent's awakening screen."
+
 ---
 
 ## Example outputs
@@ -135,6 +195,8 @@ hermes-shadow-stats --hermes-home ~/.hermes --name "Hermes of Ashes"
 ## Why ANSI first?
 
 Because this project wants to live **inside the CLI**, not beside it.
+
+If the fantasy is "my agent is leveling up in front of me," then the terminal is the right stage.
 
 ANSI gives us:
 
@@ -217,9 +279,9 @@ This is intentionally conservative for now. The current bet is:
 ## Roadmap
 
 ### Near-term
-- make the ANSI panel more iconic
+- make the ANSI panel feel even more like a live leveling-up interface
 - add stronger pixel motifs / badge language / class emblems
-- tune class/title progression
+- tune class/title progression so growth feels more narratively satisfying
 - add stable synthetic demo profiles for public examples
 
 ### Mid-term
