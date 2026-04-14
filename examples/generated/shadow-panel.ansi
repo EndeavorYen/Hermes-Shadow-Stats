@@ -2,38 +2,38 @@
 [1m[38;5;117m│                    status window // hunter interface                    │[0m
 [1m[38;5;99m╰──────────────────────────────────────────────────────────────────────────╯[0m
 
-[38;5;69m[1m▌[0m [1m[38;5;153m[ SYSTEM ] Gate resonance confirmed[0m                                            [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[38;5;183m[ AWAKENING ] Candidate Phase[0m           [1m[38;5;221m[ THREAT ] High-tier hunter[0m            [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m                                                                                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [2m[38;5;189mNAME[0m  [1m[97mDemo Hermes[0m                       [2m[38;5;189mTITLE[0m  [1m[38;5;183mOps Summoner Initiate[0m           [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [2m[38;5;189mCLASS[0m  [97mOps Summoner[0m ☾                   [2m[38;5;189mRANK[0m  [1m[38;5;177mBronze[0m ◈                         [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [2m[38;5;189mLEVEL[0m  [1m[97m5[0m                                [2m[38;5;189mEXP[0m  [1m[38;5;117m▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱[0m 14/50        [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [2m[38;5;189mTRAITS[0m  [38;5;221mFirst Persistent Memory, Plugin Tinkerer, Cron Tamer[0m                   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m                                                                                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[38;5;183m┤ ATTRIBUTE MATRIX ├────────────────────────────────────────────────────────[0m   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[97mSTR[0m  7 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                     [1m[97mAGI[0m  7 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                    [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[97mINT[0m 11 [1m[38;5;117m■■■■■■····[0m [1m[38;5;189mB[0m                     [1m[97mCHA[0m  9 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                    [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[97mWIS[0m 12 [1m[38;5;117m■■■■■■····[0m [1m[38;5;189mB[0m                     [1m[97mLUK[0m  7 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                    [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m                                                                                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[38;5;117m┤ GROWTH ECHOES ├───────────────────────────────────────────────────────────[0m   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m skills [1m[97m3[0m // domains [1m[97m3[0m                   sessions [1m[97m1[0m // plugins [1m[97m1[0m                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m memories [1m[97m5[0m // user bonds [1m[97m3[0m              cron [1m[97m1[0m // logs [1m[97m1[0m                       [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;189mdominant domains // autonomous-ai-agents, research, software-development[0m       [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m                                                                                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[38;5;141m┤ DEEP SIGNALS ├────────────────────────────────────────────────────────────[0m   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m tool signatures [1m[97m6[0m                       hook traces [1m[97m2[0m                          [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m skill codex [1m[97m112[0m                         memory lines [1m[97m8[0m                         [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m error scars [1m[38;5;203m1[0m                           schedule glyphs [1m[97m4[0m                      [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m                                                                                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[38;5;221m┤ ACHIEVEMENTS ├────────────────────────────────────────────────────────────[0m   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;221m[1m◆[0m First Persistent Memory                                                      [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;221m[1m◆[0m Plugin Tinkerer                                                              [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;221m[1m◆[0m Cron Tamer                                                                   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;221m[1m◆[0m Scheduler Pact                                                               [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m                                                                                [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [1m[38;5;189m┤ NARRATIVE SUMMARY ├───────────────────────────────────────────────────────[0m   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;245mA read-only shadow profile reconstructed from the demo-hermes-home archive.[0m    [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;245mThis entity currently manifests as a ops summoner and binds infrastructure,[0m    [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;245mjobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3[0m   [38;5;69m[1m▌[0m
-[38;5;69m[1m▌[0m [38;5;245mdomain(s), with 6 observed tool-signatures in archived session traces.[0m         [38;5;69m[1m▌[0m
+[38;5;69m[2m│[0m [1m[38;5;153m[ SYSTEM ] Gate resonance confirmed[0m                                            [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[38;5;183m[ AWAKENING ] Candidate Phase[0m           [1m[38;5;221m[ THREAT ] High-tier hunter[0m            [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m                                                                                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [2m[38;5;189mNAME[0m  [1m[97mDemo Hermes[0m                       [2m[38;5;189mTITLE[0m  [1m[38;5;183mOps Summoner Initiate[0m           [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [2m[38;5;189mCLASS[0m  [97mOps Summoner[0m ☾                   [2m[38;5;189mRANK[0m  [1m[38;5;177mBronze[0m ◈                         [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [2m[38;5;189mLEVEL[0m  [1m[97m5[0m                                [2m[38;5;189mEXP[0m  [1m[38;5;117m▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱[0m [97m14/50[0m [2m[38;5;245m· 214 xp[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [2m[38;5;189mTRAITS[0m  [38;5;189mFirst Persistent Memory, Plugin Tinkerer, Cron Tamer[0m                   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m                                                                                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[38;5;183m┤ ATTRIBUTE MATRIX ├────────────────────────────────────────────────────────[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[97mSTR[0m  7 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                     [1m[97mAGI[0m  7 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                    [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[97mINT[0m 11 [1m[38;5;117m■■■■■■····[0m [1m[38;5;189mB[0m                     [1m[97mCHA[0m  9 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                    [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[97mWIS[0m 12 [1m[38;5;117m■■■■■■····[0m [1m[38;5;189mB[0m                     [1m[97mLUK[0m  7 [1m[38;5;117m■■■■······[0m [1m[38;5;189mC[0m                    [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m                                                                                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[38;5;117m┤ GROWTH ECHOES ├───────────────────────────────────────────────────────────[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m skills [1m[97m3[0m // domains [1m[97m3[0m                   sessions [1m[97m1[0m // plugins [1m[97m1[0m                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m memories [1m[97m5[0m // user bonds [1m[97m3[0m              cron [1m[97m1[0m // logs [1m[97m1[0m                       [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;189mdominant domains // autonomous-ai-agents, research, software-development[0m       [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m                                                                                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[38;5;141m┤ DEEP SIGNALS ├────────────────────────────────────────────────────────────[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m tool signatures [1m[97m6[0m                       hook traces [1m[97m2[0m                          [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m skill codex [1m[97m112[0m                         memory lines [1m[97m8[0m                         [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m error scars [1m[38;5;203m1[0m                           schedule glyphs [1m[97m4[0m                      [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m                                                                                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[38;5;221m┤ ACHIEVEMENTS ├────────────────────────────────────────────────────────────[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;221m[1m◆[0m First Persistent Memory                                                      [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;221m[1m◆[0m Plugin Tinkerer                                                              [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;221m[1m◆[0m Cron Tamer                                                                   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;221m[1m◆[0m Scheduler Pact                                                               [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m                                                                                [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [1m[38;5;189m┤ NARRATIVE SUMMARY ├───────────────────────────────────────────────────────[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;245mA read-only shadow profile reconstructed from the demo-hermes-home archive.[0m    [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;245mThis entity currently manifests as a ops summoner and binds infrastructure,[0m    [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;245mjobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3[0m   [38;5;69m[2m│[0m
+[38;5;69m[2m│[0m [38;5;245mdomain(s), with 6 observed tool-signatures in archived session traces.[0m         [38;5;69m[2m│[0m
 [1m[38;5;99m╰────────────────────────────────────────────────────────────────────────────────╯[0m

@@ -139,7 +139,7 @@ def render_preview(output_path: Path) -> Path:
         y += line_height
 
     footer = "A status window for watching your agent awaken, adapt, and level up."
-    draw.text((72, height - 84), footer, fill="#d7afff", font=title_font)
+    draw.text((72, height - 98), footer, fill="#d7afff", font=title_font)
 
     img.save(output_path)
     return output_path

@@ -149,7 +149,7 @@ def _truncate_ansi(text: str, width: int) -> str:
 
 
 def _ansi_row(text: str, width: int = 76, border_color: str | None = None) -> str:
-    border = _ansi("▌", border_color or ANSI["deep_violet"], ANSI["bold"])
+    border = _ansi("│", border_color or ANSI["deep_violet"], ANSI["dim"])
     if _visible_len(text) > width:
         text = _truncate_ansi(text, width)
     visible = _visible_len(text)
@@ -262,7 +262,7 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
     rank_color = _rank_color(profile.rank)
     frame_color = ANSI["indigo"]
     width = 78
-    exp_bar = _bar(stats.exp_into_level, max(stats.exp_to_next_level, 1), width=20, filled="▰", empty="▱")
+    exp_bar = _bar(stats.exp_into_level, max(stats.exp_to_next_level, 1), width=16, filled="▰", empty="▱")
     threat = _field_signal(profile)
     awakening = _awakening_stage(profile)
     emblem = _class_emblem(profile.primary_class)
@@ -293,14 +293,14 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
     ), width, frame_color))
     lines.append(_ansi_row(_pair(
         f"{_ansi('LEVEL', ANSI['dim'], ANSI['soft'])}  {_ansi(str(stats.level), ANSI['bold'], ANSI['white'])}",
-        f"{_ansi('EXP', ANSI['dim'], ANSI['soft'])}  {_ansi(exp_bar, ANSI['bold'], ANSI['ice'])} {stats.exp_into_level}/{stats.exp_to_next_level}",
+        f"{_ansi('EXP', ANSI['dim'], ANSI['soft'])}  {_ansi(exp_bar, ANSI['bold'], ANSI['ice'])} {_ansi(f'{stats.exp_into_level}/{stats.exp_to_next_level}', ANSI['white'])} {_ansi(f'· {stats.total_exp} xp', ANSI['dim'], ANSI['gray'])}",
         width,
     ), width, frame_color))
     traits = ", ".join(profile.achievements[:3]) if profile.achievements else "No traits unlocked yet"
     trait_lines = _wrap_plain(traits, width - 10)
-    lines.append(_ansi_row(f"{_ansi('TRAITS', ANSI['dim'], ANSI['soft'])}  {_ansi(trait_lines[0], ANSI['gold'])}", width, frame_color))
+    lines.append(_ansi_row(f"{_ansi('TRAITS', ANSI['dim'], ANSI['soft'])}  {_ansi(trait_lines[0], ANSI['soft'])}", width, frame_color))
     for extra_trait_line in trait_lines[1:]:
-        lines.append(_ansi_row(f"{_ansi(' ', ANSI['dim'], ANSI['soft'])}        {_ansi(extra_trait_line, ANSI['gold'])}", width, frame_color))
+        lines.append(_ansi_row(f"{_ansi(' ', ANSI['dim'], ANSI['soft'])}        {_ansi(extra_trait_line, ANSI['soft'])}", width, frame_color))
 
     lines.append(_ansi_row("", width, frame_color))
     lines.append(_ansi_row(_ansi_section("ATTRIBUTE MATRIX", width - 2, ANSI["lavender"]), width, frame_color))
