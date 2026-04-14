@@ -1,0 +1,55 @@
+{
+  "name": "Demo Hermes",
+  "title": "Ops Summoner Initiate",
+  "primary_class": "Ops Summoner",
+  "rank": "Bronze",
+  "summary": "A read-only shadow profile reconstructed from Hermes artifacts in /Users/simon/Code/Hermes-Shadow-Stats/examples/demo-hermes-home. This entity currently manifests as a ops summoner and binds infrastructure, jobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3 domain(s), with 6 observed tool-signatures in archived session traces.",
+  "stats": {
+    "level": 5,
+    "exp_into_level": 14,
+    "exp_to_next_level": 50,
+    "total_exp": 214,
+    "strength": 7,
+    "intelligence": 11,
+    "wisdom": 12,
+    "agility": 7,
+    "charisma": 9,
+    "luck": 7
+  },
+  "scan": {
+    "hermes_home": "/Users/simon/Code/Hermes-Shadow-Stats/examples/demo-hermes-home",
+    "memory_entries": 5,
+    "user_entries": 3,
+    "skill_count": 3,
+    "skill_categories": {
+      "autonomous-ai-agents": 1,
+      "research": 1,
+      "software-development": 1
+    },
+    "profile_count": 0,
+    "session_file_count": 1,
+    "plugin_count": 1,
+    "log_file_count": 1,
+    "cron_file_count": 1,
+    "activity": {
+      "memory_lines": 8,
+      "skill_words": 112,
+      "session_tool_mentions": 6,
+      "session_error_mentions": 1,
+      "plugin_manifest_count": 1,
+      "plugin_hook_mentions": 2,
+      "cron_schedule_mentions": 4
+    }
+  },
+  "achievements": [
+    "First Persistent Memory",
+    "Plugin Tinkerer",
+    "Cron Tamer",
+    "Scheduler Pact"
+  ],
+  "dominant_domains": [
+    "autonomous-ai-agents",
+    "research",
+    "software-development"
+  ]
+}

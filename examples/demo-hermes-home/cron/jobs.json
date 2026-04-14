@@ -1,0 +1,2 @@
+{"schedule": "0 9 * * *", "repeat": 1, "name": "daily-progression-scan"}
+{"schedule": "0 21 * * *", "repeat": 1, "name": "nightly-growth-journal"}

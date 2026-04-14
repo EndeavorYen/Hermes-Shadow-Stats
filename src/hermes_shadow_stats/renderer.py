@@ -85,6 +85,37 @@ def _field_signal(profile: CharacterProfile) -> str:
     return "Rookie presence"
 
 
+def _awakening_stage(profile: CharacterProfile) -> str:
+    level = profile.stats.level
+    if level >= 40:
+        return "System Overclock"
+    if level >= 25:
+        return "Shadow Awakening"
+    if level >= 14:
+        return "Hunter Ascension"
+    if level >= 7:
+        return "Class Emergence"
+    return "Candidate Phase"
+
+
+def _class_emblem(primary_class: str) -> str:
+    return {
+        "Toolsmith": "⚒",
+        "Code Alchemist": "✦",
+        "Ops Summoner": "☾",
+        "Research Ranger": "➶",
+        "Memory Weaver": "✧",
+        "Workflow Scribe": "✎",
+        "Model Hunter": "◈",
+        "Shadow Commander": "♛",
+        "Rune Artisan": "✴",
+        "Signal Duelist": "⚡",
+        "Protocol Walker": "⌘",
+        "Adaptive Agent": "◬",
+        "Hunter Candidate": "◇",
+    }.get(primary_class, "◇")
+
+
 def _ansi(text: str, *codes: str) -> str:
     return "".join(codes) + text + ANSI["reset"]
 
@@ -184,6 +215,8 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
     width = 76
     exp_bar = _bar(stats.exp_into_level, max(stats.exp_to_next_level, 1), width=24, filled="▓", empty="░")
     threat = _field_signal(profile)
+    awakening = _awakening_stage(profile)
+    emblem = _class_emblem(profile.primary_class)
 
     title_banner = [
         _ansi("██   ██ ███████ ██████  ███    ███ ███████ ███████", ANSI["bold"], rank_color),
@@ -196,12 +229,14 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
 
     lines = [*title_banner, ""]
     lines.append(_ansi_row(_ansi("[ SYSTEM ] The gate has opened. Status window synchronized.", ANSI["bold"], ANSI["soft"]), width, rank_color))
+    lines.append(_ansi_row(_ansi(f"[ AWAKENING ] {awakening}", ANSI["bold"], ANSI["gold"]), width, rank_color))
     lines.append(_ansi_row("", width, rank_color))
     lines.append(_ansi_row(f"{_ansi('NAME', ANSI['dim'], ANSI['soft'])}   { _ansi(profile.name, ANSI['bold'], ANSI['white']) }", width, rank_color))
     lines.append(_ansi_row(f"{_ansi('TITLE', ANSI['dim'], ANSI['soft'])}  { _ansi(profile.title, ANSI['bold'], rank_color) }", width, rank_color))
-    lines.append(_ansi_row(f"{_ansi('CLASS', ANSI['dim'], ANSI['soft'])}  { _ansi(profile.primary_class, ANSI['white']) }    { _ansi('RANK', ANSI['dim'], ANSI['soft'])}  { _ansi(profile.rank, ANSI['bold'], rank_color) } {_rank_emblem(profile.rank)}", width, rank_color))
+    lines.append(_ansi_row(f"{_ansi('CLASS', ANSI['dim'], ANSI['soft'])}  { _ansi(profile.primary_class, ANSI['white']) } {emblem}   { _ansi('RANK', ANSI['dim'], ANSI['soft'])}  { _ansi(profile.rank, ANSI['bold'], rank_color) } {_rank_emblem(profile.rank)}", width, rank_color))
     lines.append(_ansi_row(f"{_ansi('LEVEL', ANSI['dim'], ANSI['soft'])}  { _ansi(str(stats.level), ANSI['bold'], ANSI['white']) }    { _ansi('THREAT', ANSI['dim'], ANSI['soft'])}  { _ansi(threat, ANSI['bold'], ANSI['lavender']) }", width, rank_color))
     lines.append(_ansi_row(f"{_ansi('EXP', ANSI['dim'], ANSI['soft'])}    {_ansi(exp_bar, ANSI['bold'], ANSI['cyan'])} {stats.exp_into_level}/{stats.exp_to_next_level} {_ansi(f'(total {stats.total_exp})', ANSI['dim'], ANSI['gray'])}", width, rank_color))
+    lines.append(_ansi_row(f"{_ansi('STATUS', ANSI['dim'], ANSI['soft'])} {_ansi('Traits unlocked', ANSI['bold'], ANSI['gold'])}: {', '.join(profile.achievements[:3]) if profile.achievements else 'None yet'}", width, rank_color))
     lines.append(_ansi_row("", width, rank_color))
     lines.append(_ansi_row(_ansi_section("BASE ATTRIBUTES", width - 2, rank_color), width, rank_color))
 
@@ -209,7 +244,8 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
         value = getattr(stats, attr)
         fill_color = rank_color if value >= 14 else ANSI["cyan"] if value >= 9 else ANSI["gray"]
         stat_bar = _ansi(_bar(value, width=18, filled="▰", empty="▱"), ANSI["bold"], fill_color)
-        lines.append(_ansi_row(f"{_ansi(label, ANSI['bold'], ANSI['white'])}  {value:>2}   {stat_bar}", width, rank_color))
+        tier = "S" if value >= 18 else "A" if value >= 14 else "B" if value >= 10 else "C"
+        lines.append(_ansi_row(f"{_ansi(label, ANSI['bold'], ANSI['white'])}  {value:>2}   {stat_bar}  {_ansi('Tier', ANSI['dim'], ANSI['soft'])} {tier}", width, rank_color))
 
     lines.append(_ansi_row("", width, rank_color))
     lines.append(_ansi_row(_ansi_section("GROWTH ECHOES", width - 2, ANSI["cyan"]), width, rank_color))

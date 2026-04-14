@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = ROOT / "assets" / "ansi-preview.png"
+DEMO_HOME = ROOT / "examples" / "demo-hermes-home"
 
 
 def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -31,7 +32,15 @@ def render_preview(output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     result = subprocess.run(
-        [str(ROOT / ".venv" / "bin" / "hermes-shadow-stats"), "--format", "ansi"],
+        [
+            str(ROOT / ".venv" / "bin" / "hermes-shadow-stats"),
+            "--format",
+            "ansi",
+            "--hermes-home",
+            str(DEMO_HOME),
+            "--name",
+            "Demo Hermes",
+        ],
         cwd=ROOT,
         capture_output=True,
         text=True,

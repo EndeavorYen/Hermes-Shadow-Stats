@@ -1,18 +1,23 @@
 # Examples
 
-This directory is intended for shareable sample outputs.
+This directory contains the public-facing demo material for Hermes Shadow Stats.
 
-Suggested generated files:
+## Included
 
-- `shadow-card.svg`
-- `shadow-card.png`
-- `shadow-panel.md`
-- `shadow-panel.txt`
+- `demo-hermes-home/` — a stable synthetic Hermes home used for README/demo generation
+- `generated/` — reproducible example outputs generated from the synthetic demo profile
 
-Generate local artifacts with:
+## Generate stable examples
 
 ```bash
-./scripts/export_preview.sh
+./scripts/generate_example_outputs.sh
 ```
 
-If you want stable examples for the public repo, prefer generating them from a small synthetic/sample Hermes home rather than your personal real `~/.hermes` profile.
+This will produce:
+
+- `generated/shadow-panel.ansi`
+- `generated/shadow-panel.md`
+- `generated/shadow-panel.json`
+- `../assets/ansi-preview.png`
+
+The goal is to keep public examples stable and screenshot-friendly without depending on your private real `~/.hermes` profile.

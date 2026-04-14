@@ -1,0 +1,3 @@
+- User likes concise writing with strong product framing.
+- User wants agent growth to feel visible, dramatic, and a bit chuunibyou.
+- User prefers ANSI-first CLI experiences over heavier graphical layers.

@@ -48,6 +48,8 @@ That makes it:
 
 ## Hero demo
 
+This preview is generated from the stable synthetic demo profile under `examples/demo-hermes-home/`.
+
 ```text
 ██   ██ ███████ ██████  ███    ███ ███████ ███████
 ██   ██ ██      ██   ██ ████  ████ ██      ██
@@ -57,15 +59,16 @@ That makes it:
 SHADOW STATS // SYSTEM INTERFACE
 
 █ [ SYSTEM ] The gate has opened. Status window synchronized.                  █
-█ NAME   Hermes                                                                █
-█ TITLE  Ops Summoner Archive Sovereign                                        █
-█ CLASS  Ops Summoner    RANK  Mythic 🟪                                        █
-█ LEVEL  57    THREAT  Monarch-class anomaly                                   █
-█ EXP    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░ 35/50 (total 2835)                           █
+█ [ AWAKENING ] Candidate Phase                                                █
+█ NAME   Demo Hermes                                                           █
+█ TITLE  Ops Summoner Initiate                                                 █
+█ CLASS  Ops Summoner ☾   RANK  Bronze 🟫                                       █
+█ LEVEL  5    THREAT  High-tier hunter                                         █
+█ STATUS Traits unlocked: First Persistent Memory, Plugin Tinkerer, Cron Tamer █
 █  ACHIEVEMENTS ══════════════════════════════════════════════════════════     █
 █ ◆ First Persistent Memory                                                    █
-█ ◆ Skill Archivist                                                            █
-█ ◆ Battle-Tested Operator                                                     █
+█ ◆ Plugin Tinkerer                                                            █
+█ ◆ Cron Tamer                                                                 █
 ```
 
 This is the fantasy in one screen:
@@ -200,6 +203,12 @@ hermes-shadow-stats --hermes-home ~/.hermes --name "Hermes of Ashes"
 
 ```bash
 python scripts/render_readme_preview.py
+```
+
+### Generate stable example outputs from the synthetic demo profile
+
+```bash
+./scripts/generate_example_outputs.sh
 ```
 
 ---
