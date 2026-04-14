@@ -15,6 +15,7 @@ Hermes Shadow Stats treats a Hermes home/profile as a persistent character save 
 
 - markdown status-window rendering
 - ASCII panel mode
+- SVG card mode
 - JSON export
 - richer growth heuristics from artifact content, not just file counts
 - Hermes plugin prototype wrapper
@@ -25,7 +26,7 @@ Hermes Shadow Stats treats a Hermes home/profile as a persistent character save 
 - Derive RPG-style stats from real files
 - Render a markdown character sheet with status-window flavor
 - Support custom Hermes home/profile paths
-- Keep JSON export available for future UI work
+- Keep JSON/SVG export available for future UI work
 
 ## Current scanned sources
 
@@ -48,6 +49,7 @@ Hermes Shadow Stats treats a Hermes home/profile as a persistent character save 
 - deep signals from session traces, plugin hooks, and codex size
 - markdown panel
 - ASCII panel
+- SVG card
 - JSON export
 
 ## Install
@@ -73,6 +75,18 @@ ASCII mode:
 hermes-shadow-stats --format ascii
 ```
 
+SVG mode to stdout:
+
+```bash
+hermes-shadow-stats --format svg
+```
+
+SVG mode to file:
+
+```bash
+hermes-shadow-stats --format svg --output ./artifacts/shadow-card.svg
+```
+
 JSON mode:
 
 ```bash
@@ -91,31 +105,6 @@ Custom name:
 hermes-shadow-stats --name "Hermes of Ashes"
 ```
 
-## Example
-
-```md
-# Hermes Shadow Stats
-
-> The system has acknowledged this entity.
-
-## 🟪 Status Window
-- **Name**: Hermes
-- **Title**: Model Hunter Archive Sovereign
-- **Class**: Model Hunter
-- **Rank**: Mythic
-- **Threat Evaluation**: Monarch-class anomaly
-- **Level**: 44
-- **EXP Gauge**: `█████░░░░░░░░░░░` 17/50 _(total: 2167)_
-
-## Base Attributes
-- **STR** 20  `■■■■■■■■■■`
-- **INT** 20  `■■■■■■■■■■`
-- **WIS** 11  `■■■■■■□□□□`
-- **AGI** 20  `■■■■■■■■■■`
-- **CHA** 11  `■■■■■■□□□□`
-- **LUK** 15  `■■■■■■■■□□`
-```
-
 ## Hermes plugin prototype
 
 A prototype wrapper is included in `hermes_plugin/`.
@@ -123,23 +112,25 @@ A prototype wrapper is included in `hermes_plugin/`.
 See:
 - `docs/plugin-prototype.md`
 
-## Design notes
-
-This project prefers flavor over fake precision.
-
-- numbers are derived estimates, not telemetry truth
-- classes and ranks are intended to feel like lore
-- the scanner is artifact-driven and read-only
-- output should be fun enough to share in chat or paste into issues
-
 ## Documentation
 
 - `docs/design.md` — field design, derivation logic, and future direction
 - `docs/plugin-prototype.md` — Hermes plugin wrapper sketch
+- `docs/release-checklist.md` — what to finish before first public push/release
+
+## Release polish included
+
+This repo now includes a small release-prep layer:
+
+- `.gitignore`
+- clearer README usage examples
+- SVG export path support via `--output`
+- release checklist doc
 
 ## Suggested next steps
 
+- render the SVG to PNG in CI or via helper script
 - parse session structures more deeply instead of keyword heuristics
-- add themed badges / emblem mode / SVG card output
+- add themed badges / portrait / emblem mode
 - add live hook-based progression journal
 - package plugin installation flow more cleanly

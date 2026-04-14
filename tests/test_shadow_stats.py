@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hermes_shadow_stats.renderer import render_ascii_panel, render_markdown
+from hermes_shadow_stats.renderer import render_ascii_panel, render_markdown, render_svg_card
 from hermes_shadow_stats.scanner import scan_hermes_home
 from hermes_shadow_stats.stats import build_character_profile
 
@@ -29,6 +29,7 @@ def test_scan_and_render(tmp_path: Path) -> None:
     profile = build_character_profile(scan, name="Hermes")
     panel = render_markdown(profile)
     ascii_panel = render_ascii_panel(profile)
+    svg = render_svg_card(profile)
 
     assert scan.memory_entries == 3
     assert scan.user_entries == 1
@@ -48,3 +49,6 @@ def test_scan_and_render(tmp_path: Path) -> None:
     assert profile.title in panel
     assert "HERMES SHADOW STATS // STATUS WINDOW" in ascii_panel
     assert "ACHIEVEMENTS" in ascii_panel
+    assert svg.startswith("<svg")
+    assert "Status Window" in svg
+    assert profile.title in svg
