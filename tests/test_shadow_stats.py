@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hermes_shadow_stats.renderer import render_ascii_panel, render_markdown, render_svg_card
+from hermes_shadow_stats.renderer import render_ansi_panel, render_markdown, render_svg_card
 from hermes_shadow_stats.scanner import scan_hermes_home
 from hermes_shadow_stats.stats import build_character_profile
 
@@ -28,7 +28,7 @@ def test_scan_and_render(tmp_path: Path) -> None:
     scan = scan_hermes_home(home)
     profile = build_character_profile(scan, name="Hermes")
     panel = render_markdown(profile)
-    ascii_panel = render_ascii_panel(profile)
+    ansi_panel = render_ansi_panel(profile)
     svg = render_svg_card(profile)
 
     assert scan.memory_entries == 3
@@ -47,8 +47,9 @@ def test_scan_and_render(tmp_path: Path) -> None:
     assert "github, research" in panel
     assert profile.primary_class in panel
     assert profile.title in panel
-    assert "HERMES SHADOW STATS // STATUS WINDOW" in ascii_panel
-    assert "ACHIEVEMENTS" in ascii_panel
+    assert "SHADOW STATS // SYSTEM INTERFACE" in ansi_panel
+    assert "\x1b[" in ansi_panel
+    assert "ACHIEVEMENTS" in ansi_panel
     assert svg.startswith("<svg")
     assert "Status Window" in svg
     assert profile.title in svg

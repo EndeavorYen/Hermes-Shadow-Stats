@@ -1,35 +1,171 @@
 # Hermes Shadow Stats
 
-A lightweight RPG-style overlay for Hermes Agent.
+> **Turn a Hermes profile into a living hunter card.**
+>
+> Hermes Shadow Stats scans persistent Hermes artifacts — memory, skills, sessions, plugins, cron traces — and reconstructs them as an ANSI-first RPG status window with pixel-terminal energy and Solo Leveling mood.
 
-Hermes Shadow Stats treats a Hermes home/profile as a persistent character save file: memories, skills, profiles, sessions, plugins, and automations are scanned and converted into a readable status panel with Solo Leveling flavor.
+<p align="center">
+  <strong>ANSI-first</strong> • <strong>CLI-native</strong> • <strong>read-only</strong> • <strong>artifact-driven</strong>
+</p>
 
-## What this is
+Hermes Shadow Stats is built for one very specific fantasy:
 
-- read-only
-- artifact-driven
-- low-coupling with Hermes core
-- intentionally game-like instead of pretending to be exact telemetry
+**What if your agent felt like a protagonist with levels, titles, battle scars, and unlocked abilities?**
 
-## Current feature set
+Instead of patching Hermes core, this project reads the artifacts Hermes already leaves behind and turns them into a dramatic status interface you can drop directly into a terminal workflow.
 
-- markdown status-window rendering
-- ASCII panel mode
-- SVG card mode
+That makes it:
+
+- fast to iterate on
+- easy to integrate with CLI tools
+- fun to share in screenshots
+- low-coupling with Hermes internals
+
+---
+
+## Why this is interesting
+
+Most agent dashboards feel like telemetry.
+
+Hermes Shadow Stats is trying to feel like **presence**.
+
+It maps:
+
+- persistent memory → lore / adaptation
+- skills → unlocked techniques
+- sessions → battle history
+- plugins → extensions / artifacts
+- cron → autonomy / summons / rituals
+
+into a terminal-native panel that feels closer to:
+
+- Hermes Agent's pixel-ish CLI charm
+- a dungeon system prompt
+- a hunter status window from *Solo Leveling*
+
+---
+
+## Current vibe
+
+- ANSI is the **main product**, not a side export
+- purple / cyan / gold terminal palette
+- blocky pixel-ish frame language
+- hunter-rank / system-window tone
+- markdown + JSON are still available as utility outputs
+- SVG exists, but the current design direction is **ANSI first**
+
+---
+
+## Feature set
+
+### Core
+- ANSI status window renderer
+- markdown renderer
 - JSON export
-- richer growth heuristics from artifact content, not just file counts
+- optional SVG renderer for side experiments
+
+### Character derivation
+- Level / EXP
+- STR / INT / WIS / AGI / CHA / LUK
+- rank, title, and primary class
+- threat evaluation
+- achievements / unlocked titles
+- narrative summary
+
+### Artifact signals
+- memory depth
+- skill codex size
+- session tool-signatures
+- session error scars
+- plugin manifest / hook traces
+- cron schedule glyphs
+
+### Integration direction
 - Hermes plugin prototype wrapper
-- preview export script for SVG/PNG generation
+- CLI-friendly output
+- read-only scanning approach
 
-## MVP goals
+---
 
-- Read Hermes persistent artifacts without modifying Hermes core
-- Derive RPG-style stats from real files
-- Render a markdown character sheet with status-window flavor
-- Support custom Hermes home/profile paths
-- Keep JSON/SVG export available for future UI work
+## Quickstart
 
-## Current scanned sources
+```bash
+git clone https://github.com/EndeavorYen/Hermes-Shadow-Stats.git
+cd Hermes-Shadow-Stats
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+hermes-shadow-stats
+```
+
+If you already have Hermes installed locally, this will scan `~/.hermes` by default.
+
+---
+
+## Example outputs
+
+### ANSI mode (primary)
+
+```bash
+hermes-shadow-stats
+# or
+hermes-shadow-stats --format ansi
+```
+
+### Markdown mode
+
+```bash
+hermes-shadow-stats --format markdown
+```
+
+### JSON mode
+
+```bash
+hermes-shadow-stats --format json
+```
+
+### Custom Hermes home / custom display name
+
+```bash
+hermes-shadow-stats --hermes-home ~/.hermes --name "Hermes of Ashes"
+```
+
+---
+
+## Why ANSI first?
+
+Because this project wants to live **inside the CLI**, not beside it.
+
+ANSI gives us:
+
+- direct fusion with terminal workflows
+- immediate compatibility with Hermes-style interfaces
+- shareable screenshots without needing a browser
+- a tighter aesthetic loop between data and atmosphere
+
+For now, the design priority is:
+
+1. make the terminal panel feel great
+2. make the terminal panel feel iconic
+3. only then care about richer graphical outputs
+
+So yes: SVG/PNG exist, but they are **not the hero path right now**.
+
+---
+
+## Design principles
+
+- **Read-only first** — no Hermes core surgery required
+- **Flavor over fake precision** — numbers are derived, not pretending to be authoritative telemetry
+- **CLI-native** — terminal experience is the main target
+- **Low coupling** — the scanner should survive Hermes evolution better than a deep integration would
+- **Fun matters** — this should feel cool, not just correct
+
+---
+
+## How it works
+
+Hermes Shadow Stats scans:
 
 - `memories/MEMORY.md`
 - `memories/USER.md`
@@ -40,120 +176,80 @@ Hermes Shadow Stats treats a Hermes home/profile as a persistent character save 
 - `logs/`
 - `cron/`
 
-## Current derived outputs
+Then it derives:
 
-- Level / EXP
-- STR / INT / WIS / AGI / CHA / LUK
-- rank, title, and primary class guess
-- threat evaluation flavor text
-- achievements / titles unlocked
-- deep signals from session traces, plugin hooks, and codex size
-- markdown panel
-- ASCII panel
-- SVG card
-- JSON export
+- stats
+- classes
+- titles
+- achievements
+- threat level flavor
+- summary text
 
-## Install
+without modifying Hermes itself.
 
-```bash
-cd ~/Code/Hermes-Shadow-Stats
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-## Usage
-
-Default Hermes home (`~/.hermes`):
-
-```bash
-hermes-shadow-stats
-```
-
-ASCII mode:
-
-```bash
-hermes-shadow-stats --format ascii
-```
-
-SVG mode to stdout:
-
-```bash
-hermes-shadow-stats --format svg
-```
-
-SVG mode to file:
-
-```bash
-hermes-shadow-stats --format svg --output ./artifacts/shadow-card.svg
-```
-
-JSON mode:
-
-```bash
-hermes-shadow-stats --format json
-```
-
-Custom Hermes home:
-
-```bash
-hermes-shadow-stats --hermes-home ~/.hermes
-```
-
-Custom name:
-
-```bash
-hermes-shadow-stats --name "Hermes of Ashes"
-```
-
-## Preview export flow
-
-Generate a local SVG and try to render a PNG preview:
-
-```bash
-./scripts/export_preview.sh
-```
-
-Custom output paths:
-
-```bash
-./scripts/export_preview.sh ./artifacts/shadow-card.svg ./artifacts/shadow-card.png
-```
-
-On macOS the script uses `qlmanage`. On Linux it falls back to `rsvg-convert` or `inkscape` if available.
+---
 
 ## Hermes plugin prototype
 
-A prototype wrapper is included in `hermes_plugin/`.
+A lightweight plugin prototype is included under:
+
+- `hermes_plugin/`
 
 See:
 - `docs/plugin-prototype.md`
 
+This is intentionally conservative for now. The current bet is:
+
+**ship the ANSI interface first, then deepen integration later.**
+
+---
+
 ## Documentation
 
-- `docs/design.md` — field design, derivation logic, and future direction
-- `docs/plugin-prototype.md` — Hermes plugin wrapper sketch
-- `docs/release-checklist.md` — what to finish before first public push/release
-- `examples/README.md` — how to manage shareable sample outputs
-- `CHANGELOG.md` — lightweight change log
+- `docs/design.md` — system design and derivation logic
+- `docs/plugin-prototype.md` — plugin wrapper notes
+- `docs/release-checklist.md` — release polish checklist
+- `examples/README.md` — sample output guidance
+- `CHANGELOG.md` — project changes
 
-## Release polish included
+---
 
-This repo now includes a small release-prep layer:
+## Roadmap
 
-- `.gitignore`
-- clearer README usage examples
-- SVG export path support via `--output`
-- preview generation script
-- release checklist doc
-- CI workflow for pytest
-- changelog scaffold
+### Near-term
+- make the ANSI panel more iconic
+- add stronger pixel motifs / badge language / class emblems
+- tune class/title progression
+- add stable synthetic demo profiles for public examples
 
-## Suggested next steps
+### Mid-term
+- parse session structures more deeply instead of using only heuristics
+- add growth journal / progression history
+- improve plugin-mode UX
 
-- add a stable synthetic demo profile for public examples
-- render the SVG to PNG in CI or via a Python helper instead of shell-only fallbacks
-- parse session structures more deeply instead of keyword heuristics
-- add themed badges / portrait / emblem mode
-- add live hook-based progression journal
-- package plugin installation flow more cleanly
+### Later
+- portraits
+- richer card variants
+- comparative panels across profiles
+- hook-based live progression
+
+---
+
+## Contributing / experimenting
+
+If you like agent UX, terminal aesthetics, RPG systems, or weirdly emotional tooling, this repo is very open to experimentation.
+
+Good contribution directions:
+
+- better ANSI layout ideas
+- stronger rank / class naming
+- better achievement logic
+- synthetic demo datasets
+- plugin integration ideas
+- terminal screenshot-worthy polish
+
+---
+
+## License
+
+MIT — see `LICENSE`.

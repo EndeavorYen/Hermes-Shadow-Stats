@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .renderer import render_ascii_panel, render_json, render_markdown, render_svg_card
+from .renderer import render_ansi_panel, render_json, render_markdown, render_svg_card
 from .scanner import scan_hermes_home
 from .stats import build_character_profile
 
@@ -14,13 +14,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--name", default="Hermes", help="Character name to display.")
     parser.add_argument(
         "--format",
-        choices=("markdown", "json", "ascii", "svg"),
-        default="markdown",
-        help="Output format.",
+        choices=("ansi", "markdown", "json", "svg", "ascii"),
+        default="ansi",
+        help="Output format. ansi is the primary CLI mode.",
     )
     parser.add_argument(
         "--output",
-        help="Optional file path for svg/json/markdown/ascii output. If omitted, prints to stdout.",
+        help="Optional file path for text/json/svg output. If omitted, prints to stdout.",
     )
     return parser
 
@@ -38,8 +38,8 @@ def main() -> int:
 
     if args.format == "json":
         rendered = render_json(profile)
-    elif args.format == "ascii":
-        rendered = render_ascii_panel(profile)
+    elif args.format in {"ansi", "ascii"}:
+        rendered = render_ansi_panel(profile)
     elif args.format == "svg":
         rendered = render_svg_card(profile)
     else:
