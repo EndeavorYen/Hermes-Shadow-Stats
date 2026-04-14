@@ -1,0 +1,6 @@
+name: shadow-stats
+version: 0.1.0
+description: "Hermes plugin prototype that renders an RPG-style status window from Hermes persistent artifacts."
+author: EndeavorYen
+provides_hooks: []
+provides_tools: []
