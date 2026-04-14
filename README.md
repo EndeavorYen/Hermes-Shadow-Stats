@@ -107,7 +107,7 @@ into a terminal-native panel that feels closer to:
 ## Current vibe
 
 - ANSI is the **main product**, not a side export
-- purple / cyan / gold terminal palette
+- blue / deep-blue / gold terminal palette
 - blocky pixel-ish frame language
 - hunter-rank / system-window tone
 - markdown + JSON are still available as utility outputs

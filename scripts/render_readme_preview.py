@@ -14,14 +14,15 @@ ANSI_RE = re.compile(r"\x1b\[([0-9;]*)m")
 
 ANSI_256 = {
     69: "#5f87ff",
-    99: "#875fff",
+    99: "#5f87ff",
     103: "#8787af",
+    110: "#87afd7",
     111: "#87afff",
     117: "#87d7ff",
-    141: "#af87ff",
+    141: "#87d7ff",
     153: "#afd7ff",
-    177: "#d787ff",
-    183: "#d7afff",
+    177: "#87afd7",
+    183: "#afd7ff",
     189: "#d7d7ff",
     203: "#ff5f5f",
     221: "#ffd75f",
@@ -118,7 +119,7 @@ def render_preview(output_path: Path) -> Path:
     body_font = load_font(25, bold=False)
     body_font_bold = load_font(25, bold=True)
 
-    draw.text((72, 66), "HERMES SHADOW STATS", fill="#d7afff", font=title_font)
+    draw.text((72, 66), "HERMES SHADOW STATS", fill="#afd7ff", font=title_font)
     draw.text((860, 66), "README PREVIEW // ANSI-FIRST", fill="#87d7ff", font=title_font)
 
     x0 = 72
@@ -139,7 +140,7 @@ def render_preview(output_path: Path) -> Path:
         y += line_height
 
     footer = "A status window for watching your agent awaken, adapt, and level up."
-    draw.text((72, height - 98), footer, fill="#d7afff", font=title_font)
+    draw.text((72, height - 98), footer, fill="#afd7ff", font=title_font)
 
     img.save(output_path)
     return output_path
