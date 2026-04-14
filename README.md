@@ -15,6 +15,10 @@
   <strong>ANSI-first</strong> • <strong>CLI-native</strong> • <strong>read-only</strong> • <strong>artifact-driven</strong>
 </p>
 
+<p align="center">
+  <img src="assets/ansi-preview.png" alt="Hermes Shadow Stats ANSI preview" width="100%">
+</p>
+
 Hermes Shadow Stats is built around one very specific fantasy:
 
 **You are not just running an agent. You are watching it level up.**
@@ -112,15 +116,9 @@ into a terminal-native panel that feels closer to:
 
 ---
 
-## Feature set
+## Why people might star this
 
-### Core
-- ANSI status window renderer
-- markdown renderer
-- JSON export
-- optional SVG renderer for side experiments
-
-### Character derivation
+### 1. It gives agents visible progression
 - Level / EXP
 - STR / INT / WIS / AGI / CHA / LUK
 - rank, title, and primary class
@@ -128,7 +126,7 @@ into a terminal-native panel that feels closer to:
 - achievements / unlocked titles
 - narrative summary
 
-### Artifact signals
+### 2. It turns real artifacts into fantasy signals
 - memory depth
 - skill codex size
 - session tool-signatures
@@ -136,10 +134,18 @@ into a terminal-native panel that feels closer to:
 - plugin manifest / hook traces
 - cron schedule glyphs
 
-### Integration direction
-- Hermes plugin prototype wrapper
+### 3. It is actually usable in a terminal
+- ANSI status window renderer
+- markdown renderer
+- JSON export
+- optional SVG renderer for side experiments
 - CLI-friendly output
 - read-only scanning approach
+
+### 4. It can evolve into deeper Hermes integration
+- Hermes plugin prototype wrapper
+- future growth journal / progression history
+- future profile comparisons / live overlays
 
 ---
 
@@ -162,7 +168,7 @@ In the best case, your first run should feel like this:
 
 ---
 
-## Example outputs
+## Try it in 10 seconds
 
 ### ANSI mode (primary)
 
@@ -188,6 +194,12 @@ hermes-shadow-stats --format json
 
 ```bash
 hermes-shadow-stats --hermes-home ~/.hermes --name "Hermes of Ashes"
+```
+
+### Regenerate the README preview image
+
+```bash
+python scripts/render_readme_preview.py
 ```
 
 ---
@@ -273,6 +285,7 @@ This is intentionally conservative for now. The current bet is:
 - `docs/release-checklist.md` — release polish checklist
 - `examples/README.md` — sample output guidance
 - `CHANGELOG.md` — project changes
+- `scripts/render_readme_preview.py` — regenerate the social/README preview image
 
 ---
 
