@@ -2,7 +2,7 @@
 
 > The system has acknowledged this entity.
 
-## 🟫 Status Window
+## ◈ Status Window
 - **Name**: Demo Hermes
 - **Title**: Ops Summoner Initiate
 - **Class**: Ops Summoner
@@ -46,4 +46,4 @@
 - Scheduler Pact
 
 ## Narrative Summary
-A read-only shadow profile reconstructed from Hermes artifacts in /Users/simon/Code/Hermes-Shadow-Stats/examples/demo-hermes-home. This entity currently manifests as a ops summoner and binds infrastructure, jobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3 domain(s), with 6 observed tool-signatures in archived session traces.
+A read-only shadow profile reconstructed from the demo-hermes-home archive. This entity currently manifests as a ops summoner and binds infrastructure, jobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3 domain(s), with 6 observed tool-signatures in archived session traces.

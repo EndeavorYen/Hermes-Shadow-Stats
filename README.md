@@ -51,24 +51,20 @@ That makes it:
 This preview is generated from the stable synthetic demo profile under `examples/demo-hermes-home/`.
 
 ```text
-██   ██ ███████ ██████  ███    ███ ███████ ███████
-██   ██ ██      ██   ██ ████  ████ ██      ██
-███████ █████   ██████  ██ ████ ██ █████   ███████
-██   ██ ██      ██   ██ ██  ██  ██ ██           ██
-██   ██ ███████ ██   ██ ██      ██ ███████ ███████
-SHADOW STATS // SYSTEM INTERFACE
+╭────────────────────────── HERMES SHADOW STATS ──────────────────────────╮
+│                    status window // hunter interface                    │
+╰──────────────────────────────────────────────────────────────────────────╯
 
-█ [ SYSTEM ] The gate has opened. Status window synchronized.                  █
-█ [ AWAKENING ] Candidate Phase                                                █
-█ NAME   Demo Hermes                                                           █
-█ TITLE  Ops Summoner Initiate                                                 █
-█ CLASS  Ops Summoner ☾   RANK  Bronze 🟫                                       █
-█ LEVEL  5    THREAT  High-tier hunter                                         █
-█ STATUS Traits unlocked: First Persistent Memory, Plugin Tinkerer, Cron Tamer █
-█  ACHIEVEMENTS ══════════════════════════════════════════════════════════     █
-█ ◆ First Persistent Memory                                                    █
-█ ◆ Plugin Tinkerer                                                            █
-█ ◆ Cron Tamer                                                                 █
+▌ [ SYSTEM ] Gate resonance confirmed                                            ▌
+▌ [ AWAKENING ] Candidate Phase           [ THREAT ] High-tier hunter            ▌
+▌ NAME  Demo Hermes                       TITLE  Ops Summoner Initiate           ▌
+▌ CLASS  Ops Summoner ☾                   RANK  Bronze ◈                         ▌
+▌ LEVEL  5                                EXP  ▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 14/50        ▌
+▌ TRAITS  First Persistent Memory, Plugin Tinkerer, Cron Tamer                   ▌
+▌ ┤ ACHIEVEMENTS ├────────────────────────────────────────────────────────────   ▌
+▌ ◆ First Persistent Memory                                                      ▌
+▌ ◆ Plugin Tinkerer                                                              ▌
+▌ ◆ Cron Tamer                                                                   ▌
 ```
 
 This is the fantasy in one screen:

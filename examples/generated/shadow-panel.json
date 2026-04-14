@@ -3,7 +3,7 @@
   "title": "Ops Summoner Initiate",
   "primary_class": "Ops Summoner",
   "rank": "Bronze",
-  "summary": "A read-only shadow profile reconstructed from Hermes artifacts in /Users/simon/Code/Hermes-Shadow-Stats/examples/demo-hermes-home. This entity currently manifests as a ops summoner and binds infrastructure, jobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3 domain(s), with 6 observed tool-signatures in archived session traces.",
+  "summary": "A read-only shadow profile reconstructed from the demo-hermes-home archive. This entity currently manifests as a ops summoner and binds infrastructure, jobs, and daemon-like rituals. It has learned 3 persistent skill(s) across 3 domain(s), with 6 observed tool-signatures in archived session traces.",
   "stats": {
     "level": 5,
     "exp_into_level": 14,

@@ -212,8 +212,10 @@ def build_character_profile(scan: ScanSummary, name: str = "Hermes") -> Characte
     achievements = _build_achievements(scan, primary_class, rank)
     flavor = FLAVOR_TAGS.get(primary_class, FLAVOR_TAGS["Adaptive Agent"])
 
+    home_str = str(scan.hermes_home)
+    home_label = home_str.rstrip("/").split("/")[-1] or home_str
     summary = (
-        f"A read-only shadow profile reconstructed from Hermes artifacts in {scan.hermes_home}. "
+        f"A read-only shadow profile reconstructed from the {home_label} archive. "
         f"This entity currently manifests as a {primary_class.lower()} and {flavor}. "
         f"It has learned {scan.skill_count} persistent skill(s) across {len(scan.skill_categories)} domain(s), "
         f"with {scan.activity.session_tool_mentions} observed tool-signatures in archived session traces."

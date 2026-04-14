@@ -10,6 +10,26 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = ROOT / "assets" / "ansi-preview.png"
 DEMO_HOME = ROOT / "examples" / "demo-hermes-home"
+ANSI_RE = re.compile(r"\x1b\[([0-9;]*)m")
+
+ANSI_256 = {
+    69: "#5f87ff",
+    99: "#875fff",
+    103: "#8787af",
+    111: "#87afff",
+    117: "#87d7ff",
+    141: "#af87ff",
+    153: "#afd7ff",
+    177: "#d787ff",
+    183: "#d7afff",
+    189: "#d7d7ff",
+    203: "#ff5f5f",
+    221: "#ffd75f",
+    245: "#8a8a8a",
+    250: "#bcbcbc",
+}
+
+BASE_STYLE = {"fg": "#e7eaf6", "bold": False, "dim": False}
 
 
 def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -26,6 +46,42 @@ def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFo
             except Exception:
                 pass
     return ImageFont.load_default()
+
+
+def ansi_to_segments(line: str) -> list[tuple[str, dict[str, object]]]:
+    style = dict(BASE_STYLE)
+    parts: list[tuple[str, dict[str, object]]] = []
+    cursor = 0
+    for match in ANSI_RE.finditer(line):
+        if match.start() > cursor:
+            parts.append((line[cursor:match.start()], dict(style)))
+        codes = [int(x) for x in match.group(1).split(";") if x] or [0]
+        i = 0
+        while i < len(codes):
+            code = codes[i]
+            if code == 0:
+                style = dict(BASE_STYLE)
+            elif code == 1:
+                style["bold"] = True
+            elif code == 2:
+                style["dim"] = True
+            elif code == 97:
+                style["fg"] = "#f8fbff"
+            elif code == 38 and i + 2 < len(codes) and codes[i + 1] == 5:
+                style["fg"] = ANSI_256.get(codes[i + 2], style["fg"])
+                i += 2
+            i += 1
+        cursor = match.end()
+    if cursor < len(line):
+        parts.append((line[cursor:], dict(style)))
+    return parts
+
+
+def style_fill(style: dict[str, object]) -> str:
+    fill = str(style["fg"])
+    if style.get("dim"):
+        return "#8e95b5" if fill == BASE_STYLE["fg"] else fill
+    return fill
 
 
 def render_preview(output_path: Path) -> Path:
@@ -46,61 +102,44 @@ def render_preview(output_path: Path) -> Path:
         text=True,
         check=True,
     )
-    text = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
-    lines = text.splitlines()[:30]
 
-    width = 1600
-    height = 980
-    img = Image.new("RGB", (width, height), "#09090f")
+    lines = result.stdout.splitlines()[:24]
+    width = 1540
+    height = 1080
+    img = Image.new("RGB", (width, height), "#070916")
     draw = ImageDraw.Draw(img)
 
-    for i, color in enumerate(["#17112b", "#10182a", "#09090f"]):
-        draw.rounded_rectangle((30 + i * 8, 30 + i * 8, width - 30 - i * 8, height - 30 - i * 8), radius=28, fill=color)
+    draw.rounded_rectangle((28, 28, width - 28, height - 28), radius=34, fill="#080b18")
+    draw.rounded_rectangle((44, 44, width - 44, height - 44), radius=28, fill="#0d1020", outline="#5f87ff", width=2)
+    draw.rounded_rectangle((44, 44, width - 44, 118), radius=28, fill="#12152a")
+    draw.line((72, 118, width - 72, 118), fill="#2c3d73", width=1)
 
-    draw.rounded_rectangle((40, 40, width - 40, height - 40), radius=24, outline="#8b5cf6", width=3)
-    draw.rounded_rectangle((40, 40, width - 40, 120), radius=24, fill="#11131a")
+    title_font = load_font(26, bold=True)
+    body_font = load_font(25, bold=False)
+    body_font_bold = load_font(25, bold=True)
 
-    title_font = load_font(24, bold=True)
-    terminal_font = load_font(24, bold=False)
-    terminal_font_bold = load_font(24, bold=True)
+    draw.text((72, 66), "HERMES SHADOW STATS", fill="#d7afff", font=title_font)
+    draw.text((860, 66), "README PREVIEW // ANSI-FIRST", fill="#87d7ff", font=title_font)
 
-    draw.text((70, 66), "HERMES SHADOW STATS", fill="#d8c4ff", font=title_font)
-    draw.text((1080, 66), "ANSI-FIRST HUNTER INTERFACE", fill="#7dd3fc", font=title_font)
+    x0 = 72
+    y = 158
+    char_width = draw.textbbox((0, 0), "M", font=body_font)[2]
+    line_height = 33
 
-    palette = {
-        "default": "#e5e7eb",
-        "accent": "#c4b5fd",
-        "cyan": "#7dd3fc",
-        "gold": "#fcd34d",
-    }
-
-    y = 155
-    for idx, line in enumerate(lines):
-        color = palette["default"]
-        font_used = terminal_font
-        stripped = line.strip()
-        if idx < 6:
-            color = palette["accent"] if idx in {0, 2, 4, 5} else palette["cyan"]
-            font_used = terminal_font_bold
-        elif "[ SYSTEM ]" in line:
-            color = palette["cyan"]
-            font_used = terminal_font_bold
-        elif any(key in line for key in ["BASE ATTRIBUTES", "GROWTH ECHOES", "DEEP SIGNALS", "ACHIEVEMENTS", "NARRATIVE SUMMARY"]):
-            color = palette["gold"]
-            font_used = terminal_font_bold
-        elif any(key in line for key in ["NAME", "TITLE", "CLASS", "LEVEL", "EXP"]):
-            color = palette["accent"]
-            font_used = terminal_font_bold
-        elif "THREAT" in line or "Mythic" in line:
-            color = palette["accent"]
-        elif stripped == "":
-            y += 10
-            continue
-        draw.text((70, y), line, fill=color, font=font_used)
-        y += 28
+    for line in lines:
+        segments = ansi_to_segments(line)
+        x = x0
+        for text, style in segments:
+            if not text:
+                continue
+            font = body_font_bold if style.get("bold") else body_font
+            fill = style_fill(style)
+            draw.text((x, y), text, fill=fill, font=font)
+            x += char_width * len(text)
+        y += line_height
 
     footer = "A status window for watching your agent awaken, adapt, and level up."
-    draw.text((70, height - 78), footer, fill="#d8c4ff", font=title_font)
+    draw.text((72, height - 84), footer, fill="#d7afff", font=title_font)
 
     img.save(output_path)
     return output_path
