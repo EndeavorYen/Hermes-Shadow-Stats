@@ -55,16 +55,18 @@ This preview is generated from the stable synthetic demo profile under `examples
 │                    status window // hunter interface                    │
 ╰──────────────────────────────────────────────────────────────────────────╯
 
-▌ [ SYSTEM ] Gate resonance confirmed                                            ▌
-▌ [ AWAKENING ] Candidate Phase           [ THREAT ] High-tier hunter            ▌
-▌ NAME  Demo Hermes                       TITLE  Ops Summoner Initiate           ▌
-▌ CLASS  Ops Summoner ☾                   RANK  Bronze ◈                         ▌
-▌ LEVEL  5                                EXP  ▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 14/50        ▌
-▌ TRAITS  First Persistent Memory, Plugin Tinkerer, Cron Tamer                   ▌
-▌ ┤ ACHIEVEMENTS ├────────────────────────────────────────────────────────────   ▌
-▌ ◆ First Persistent Memory                                                      ▌
-▌ ◆ Plugin Tinkerer                                                              ▌
-▌ ◆ Cron Tamer                                                                   ▌
+██   ██ ███████ ██████  ███    ███ ███████ ███████
+██   ██ ██      ██   ██ ████  ████ ██      ██
+███████ █████   ██████  ██ ████ ██ █████   ███████
+██   ██ ██      ██   ██ ██  ██  ██ ██           ██
+██   ██ ███████ ██   ██ ██      ██ ███████ ███████
+SHADOW STATS // PIXEL HUNTER INTERFACE
+
+│ [ SYSTEM ] Gate resonance confirmed                                            │
+│ [ AWAKENING ] Candidate Phase           [ THREAT ] High-tier hunter            │
+│ NAME  Demo Hermes                       TITLE  Ops Summoner Initiate           │
+│ CLASS  Ops Summoner ☾                   RANK  Bronze ◈                         │
+│ LEVEL  5                                EXP  ▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱ 14/50 · 214 xp   │
 ```
 
 This is the fantasy in one screen:

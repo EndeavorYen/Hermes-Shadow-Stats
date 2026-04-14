@@ -272,8 +272,16 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
         _ansi("│                    status window // hunter interface                    │", ANSI["bold"], ANSI["ice"]),
         _ansi("╰──────────────────────────────────────────────────────────────────────────╯", ANSI["bold"], ANSI["deep_violet"]),
     ]
+    logo_lines = [
+        _ansi("██   ██ ███████ ██████  ███    ███ ███████ ███████", ANSI["bold"], ANSI["white"]),
+        _ansi("██   ██ ██      ██   ██ ████  ████ ██      ██     ", ANSI["bold"], ANSI["ice"]),
+        _ansi("███████ █████   ██████  ██ ████ ██ █████   ███████", ANSI["bold"], ANSI["blue"]),
+        _ansi("██   ██ ██      ██   ██ ██  ██  ██ ██           ██", ANSI["bold"], ANSI["cyan"]),
+        _ansi("██   ██ ███████ ██   ██ ██      ██ ███████ ███████", ANSI["bold"], ANSI["deep_violet"]),
+        _ansi("SHADOW STATS // PIXEL HUNTER INTERFACE", ANSI["bold"], ANSI["soft"]),
+    ]
 
-    lines = [*title_banner, ""]
+    lines = [*title_banner, "", *logo_lines, ""]
     lines.append(_ansi_row(_ansi("[ SYSTEM ] Gate resonance confirmed", ANSI["bold"], ANSI["cyan"]), width, frame_color))
     lines.append(_ansi_row(_pair(
         _ansi(f"[ AWAKENING ] {awakening}", ANSI["bold"], ANSI["lavender"]),

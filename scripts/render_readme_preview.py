@@ -104,7 +104,7 @@ def render_preview(output_path: Path) -> Path:
         check=True,
     )
 
-    lines = result.stdout.splitlines()[:24]
+    lines = result.stdout.splitlines()[:30]
     width = 1540
     height = 1080
     img = Image.new("RGB", (width, height), "#070916")
