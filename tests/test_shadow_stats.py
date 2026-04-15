@@ -58,8 +58,13 @@ def test_scan_and_render(tmp_path: Path) -> None:
     assert "FIELD REPORT" in ansi_panel
     assert "██   ██" in ansi_panel
     assert "HERMES // SHADOW PROFILE // ANSI WINDOW" in compact_panel
+    assert "IDENTITY  " in compact_panel
+    assert f"total {profile.stats.total_exp} xp" in compact_panel
     assert "HERMES // SHADOW PROFILE" in minimal_panel
     assert "status window // ansi mode" in minimal_panel
+    assert profile.primary_class in minimal_panel
+    assert "TOTAL" in minimal_panel
+    assert f"{profile.stats.total_exp} xp" in minimal_panel
     assert svg.startswith("<svg")
     assert "Status Window" in svg
     assert profile.title in svg

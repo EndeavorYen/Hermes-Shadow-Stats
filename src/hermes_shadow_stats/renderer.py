@@ -245,6 +245,131 @@ def _cli_logo_banner(width: int, frame_color: str, banner_mode: str = "auto") ->
     return lines
 
 
+def _stacked_value_rows(
+    label: str,
+    value: str,
+    width: int,
+    frame_color: str,
+    *,
+    label_color: str | None = None,
+    value_color: str | None = None,
+    indent: int = 2,
+) -> list[str]:
+    label_text = _ansi(label, ANSI["dim"], label_color or ANSI["soft"])
+    value_lines = _wrap_plain(value, max(8, width - len(label) - indent))
+    rows = [_ansi_row(f"{label_text}{' ' * indent}{_ansi(value_lines[0], value_color or ANSI['white'])}", width, frame_color)]
+    continuation = " " * (len(label) + indent)
+    for extra_line in value_lines[1:]:
+        rows.append(_ansi_row(f"{continuation}{_ansi(extra_line, value_color or ANSI['white'])}", width, frame_color))
+    return rows
+
+
+def _top_summary_rows(
+    profile: CharacterProfile,
+    width: int,
+    frame_color: str,
+    threat: str,
+    awakening: str,
+    emblem: str,
+    mode: str,
+) -> list[str]:
+    if mode == "wide":
+        return [
+            _ansi_row(_pair(
+                _ansi(f"[ STATUS ] {profile.rank} rank // lvl {profile.stats.level}", ANSI["bold"], ANSI["cyan"]),
+                _ansi(f"[ THREAT CLASS ] {threat}", ANSI["bold"], ANSI["gold"]),
+                width,
+            ), width, frame_color),
+            _ansi_row(_pair(
+                _ansi(f"[ AWAKENING ] {awakening}", ANSI["bold"], ANSI["lavender"]),
+                _ansi(f"[ CLASS SIGIL ] {profile.primary_class} {emblem}", ANSI["bold"], ANSI["ice"]),
+                width,
+            ), width, frame_color),
+        ]
+
+    if mode == "compact":
+        return [
+            _ansi_row(_ansi(f"[ STATUS ] {profile.rank} // Lv {profile.stats.level}", ANSI["bold"], ANSI["cyan"]), width, frame_color),
+            _ansi_row(_ansi(f"[ THREAT ] {threat}", ANSI["bold"], ANSI["gold"]), width, frame_color),
+            _ansi_row(_ansi(f"[ AWAKENING ] {awakening}", ANSI["bold"], ANSI["lavender"]), width, frame_color),
+            _ansi_row(_ansi(f"[ CLASS SIGIL ] {profile.primary_class} {emblem}", ANSI["bold"], ANSI["ice"]), width, frame_color),
+        ]
+
+    return [
+        _ansi_row(_ansi(f"[ STATUS ] {profile.rank} // Lv {profile.stats.level}", ANSI["bold"], ANSI["cyan"]), width, frame_color),
+        _ansi_row(_ansi(f"[ THREAT ] {threat}", ANSI["bold"], ANSI["gold"]), width, frame_color),
+        _ansi_row(_ansi(f"[ AWAKEN ] {awakening}", ANSI["bold"], ANSI["lavender"]), width, frame_color),
+        _ansi_row(_ansi(f"[ SIGIL ] {emblem}  [ XP ] {profile.stats.exp_into_level}/{profile.stats.exp_to_next_level}", ANSI["bold"], ANSI["ice"]), width, frame_color),
+    ]
+
+
+def _identity_rows(
+    profile: CharacterProfile,
+    width: int,
+    frame_color: str,
+    exp_bar: str,
+    emblem: str,
+    mode: str,
+) -> list[str]:
+    stats = profile.stats
+    traits = ", ".join(profile.achievements[:3]) if profile.achievements else "No feats awakened yet"
+
+    if mode == "wide":
+        trait_lines = _wrap_plain(traits, width - 10)
+        rows = [
+            _ansi_row(_center_ansi(_ansi(profile.name, ANSI["bold"], ANSI["white"]), width), width, frame_color),
+            _ansi_row(_center_ansi(
+                _ansi(f"{profile.primary_class} // {profile.rank} {_rank_emblem(profile.rank)} // Lv {stats.level}", ANSI["bold"], ANSI["lavender"]),
+                width,
+            ), width, frame_color),
+            _ansi_row(_center_ansi(_ansi(profile.title, ANSI["soft"]), width), width, frame_color),
+            _ansi_row(_pair(
+                f"{_ansi('CLASS SIGIL', ANSI['dim'], ANSI['soft'])}  {_ansi(emblem, ANSI['bold'], ANSI['ice'])}",
+                f"{_ansi('EXP', ANSI['dim'], ANSI['soft'])}  {_ansi(exp_bar, ANSI['bold'], ANSI['ice'])} {_ansi(f'{stats.exp_into_level}/{stats.exp_to_next_level}', ANSI['white'])} {_ansi(f'· {stats.total_exp} xp', ANSI['dim'], ANSI['gray'])}",
+                width,
+            ), width, frame_color),
+            _ansi_row(f"{_ansi('FEATS', ANSI['dim'], ANSI['soft'])}  {_ansi(trait_lines[0], ANSI['white'])}", width, frame_color),
+        ]
+        for extra_trait_line in trait_lines[1:]:
+            rows.append(_ansi_row(f"{_ansi(' ', ANSI['dim'], ANSI['soft'])}        {_ansi(extra_trait_line, ANSI['white'])}", width, frame_color))
+        return rows
+
+    if mode == "compact":
+        rows = [
+            _ansi_row(_center_ansi(_ansi(profile.name, ANSI["bold"], ANSI["white"]), width), width, frame_color),
+            _ansi_row(_ansi(f"IDENTITY  {profile.primary_class} {emblem} // {profile.rank} rank // Lv {stats.level}", ANSI["bold"], ANSI["lavender"]), width, frame_color),
+        ]
+        rows.extend(_stacked_value_rows("TITLE", profile.title, width, frame_color, value_color=ANSI["soft"]))
+        rows.extend(_stacked_value_rows(
+            "EXP",
+            f"{stats.exp_into_level}/{stats.exp_to_next_level} · total {stats.total_exp} xp",
+            width,
+            frame_color,
+            value_color=ANSI["white"],
+        ))
+        rows.append(_ansi_row(_center_ansi(_ansi(exp_bar, ANSI["bold"], ANSI["ice"]), width), width, frame_color))
+        rows.extend(_stacked_value_rows("FEATS", traits, width, frame_color, value_color=ANSI["white"]))
+        return rows
+
+    rows = [
+        _ansi_row(_center_ansi(_ansi(profile.name, ANSI["bold"], ANSI["white"]), width), width, frame_color),
+    ]
+    rows.extend(_stacked_value_rows("CLASS", f"{profile.primary_class} {emblem}", width, frame_color, value_color=ANSI["lavender"]))
+    rows.extend(_stacked_value_rows("RANK", f"{profile.rank} rank // Lv {stats.level}", width, frame_color, value_color=ANSI["lavender"]))
+    rows.extend(_stacked_value_rows("TITLE", profile.title, width, frame_color, value_color=ANSI["soft"]))
+    rows.extend(_stacked_value_rows(
+        "EXP",
+        f"{stats.exp_into_level}/{stats.exp_to_next_level}",
+        width,
+        frame_color,
+        value_color=ANSI["white"],
+    ))
+    rows.append(_ansi_row(_center_ansi(_ansi(exp_bar, ANSI["bold"], ANSI["ice"]), width), width, frame_color))
+    rows.extend(_stacked_value_rows("TOTAL", f"{stats.total_exp} xp", width, frame_color, value_color=ANSI["gray"]))
+    rows.extend(_stacked_value_rows("FEATS", traits, width, frame_color, value_color=ANSI["white"]))
+    return rows
+
+
 def render_markdown(profile: CharacterProfile) -> str:
     stats = profile.stats
     scan = profile.scan
@@ -316,6 +441,7 @@ def render_ansi_panel(profile: CharacterProfile, banner_mode: str = "auto", widt
     rank_color = _rank_color(profile.rank)
     frame_color = ANSI["indigo"]
     width = width or 78
+    mode = _resolve_banner_mode(width, banner_mode)
     exp_bar = _bar(stats.exp_into_level, max(stats.exp_to_next_level, 1), width=16, filled="▰", empty="▱")
     threat = _field_signal(profile)
     awakening = _awakening_stage(profile)
@@ -332,33 +458,9 @@ def render_ansi_panel(profile: CharacterProfile, banner_mode: str = "auto", widt
     lines = [*title_banner, ""]
     lines.extend(_cli_logo_banner(width, frame_color, banner_mode=banner_mode))
     lines.append(_ansi_row("", width, frame_color))
-    lines.append(_ansi_row(_pair(
-        _ansi(f"[ STATUS ] {profile.rank} rank // lvl {stats.level}", ANSI["bold"], ANSI["cyan"]),
-        _ansi(f"[ THREAT CLASS ] {threat}", ANSI["bold"], ANSI["gold"]),
-        width,
-    ), width, frame_color))
-    lines.append(_ansi_row(_pair(
-        _ansi(f"[ AWAKENING ] {awakening}", ANSI["bold"], ANSI["lavender"]),
-        _ansi(f"[ CLASS SIGIL ] {profile.primary_class} {emblem}", ANSI["bold"], ANSI["ice"]),
-        width,
-    ), width, frame_color))
+    lines.extend(_top_summary_rows(profile, width, frame_color, threat, awakening, emblem, mode))
     lines.append(_ansi_row("", width, frame_color))
-    lines.append(_ansi_row(_center_ansi(_ansi(profile.name, ANSI['bold'], ANSI['white']), width), width, frame_color))
-    lines.append(_ansi_row(_center_ansi(
-        _ansi(f"{profile.primary_class} // {profile.rank} {_rank_emblem(profile.rank)} // Lv {stats.level}", ANSI['bold'], ANSI['lavender']),
-        width,
-    ), width, frame_color))
-    lines.append(_ansi_row(_center_ansi(_ansi(profile.title, ANSI['soft']), width), width, frame_color))
-    lines.append(_ansi_row(_pair(
-        f"{_ansi('CLASS SIGIL', ANSI['dim'], ANSI['soft'])}  {_ansi(emblem, ANSI['bold'], ANSI['ice'])}",
-        f"{_ansi('EXP', ANSI['dim'], ANSI['soft'])}  {_ansi(exp_bar, ANSI['bold'], ANSI['ice'])} {_ansi(f'{stats.exp_into_level}/{stats.exp_to_next_level}', ANSI['white'])} {_ansi(f'· {stats.total_exp} xp', ANSI['dim'], ANSI['gray'])}",
-        width,
-    ), width, frame_color))
-    traits = ", ".join(profile.achievements[:3]) if profile.achievements else "No feats awakened yet"
-    trait_lines = _wrap_plain(traits, width - 10)
-    lines.append(_ansi_row(f"{_ansi('FEATS', ANSI['dim'], ANSI['soft'])}  {_ansi(trait_lines[0], ANSI['white'])}", width, frame_color))
-    for extra_trait_line in trait_lines[1:]:
-        lines.append(_ansi_row(f"{_ansi(' ', ANSI['dim'], ANSI['soft'])}        {_ansi(extra_trait_line, ANSI['white'])}", width, frame_color))
+    lines.extend(_identity_rows(profile, width, frame_color, exp_bar, emblem, mode))
 
     lines.append(_ansi_row("", width, frame_color))
     lines.append(_ansi_row(_ansi_section("ATTRIBUTES", width - 2, ANSI["lavender"]), width, frame_color))

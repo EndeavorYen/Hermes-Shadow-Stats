@@ -175,6 +175,24 @@ hermes-shadow-stats
 hermes-shadow-stats --format ansi
 ```
 
+### Banner modes for the CLI hero/logo
+
+```bash
+# auto: picks wide / compact / minimal from terminal width
+hermes-shadow-stats --banner-mode auto
+
+# force the big banner treatment
+hermes-shadow-stats --banner-mode wide
+
+# force a shorter text-mode banner for narrower terminals
+hermes-shadow-stats --banner-mode compact
+
+# fall back to a very small header-safe mode
+hermes-shadow-stats --banner-mode minimal
+```
+
+The CLI now ships with a **Unicode + ANSI banner path** rather than a single fixed header. Wide terminals get the large block-logo treatment, medium terminals get a shorter banner, and narrow terminals fall back to a compact status-window header instead of breaking alignment.
+
 ### Markdown mode
 
 ```bash
