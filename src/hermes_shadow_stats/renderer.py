@@ -268,24 +268,16 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
     emblem = _class_emblem(profile.primary_class)
     domains = ", ".join(profile.dominant_domains[:3]) if profile.dominant_domains else "none"
     title_banner = [
-        _ansi("╭────────────────────────── HERMES SHADOW STATS ──────────────────────────╮", ANSI["bold"], ANSI["deep_violet"]),
-        _ansi("│                    status window // hunter interface                    │", ANSI["bold"], ANSI["ice"]),
+        _ansi("╭───────────────────────── HERMES SHADOW PROFILE ─────────────────────────╮", ANSI["bold"], ANSI["deep_violet"]),
+        _ansi("│                     awakened archive // status window                   │", ANSI["bold"], ANSI["ice"]),
         _ansi("╰──────────────────────────────────────────────────────────────────────────╯", ANSI["bold"], ANSI["deep_violet"]),
     ]
-    logo_lines = [
-        _ansi("██   ██ ███████ ██████  ███    ███ ███████ ███████", ANSI["bold"], ANSI["white"]),
-        _ansi("██   ██ ██      ██   ██ ████  ████ ██      ██     ", ANSI["bold"], ANSI["ice"]),
-        _ansi("███████ █████   ██████  ██ ████ ██ █████   ███████", ANSI["bold"], ANSI["blue"]),
-        _ansi("██   ██ ██      ██   ██ ██  ██  ██ ██           ██", ANSI["bold"], ANSI["cyan"]),
-        _ansi("██   ██ ███████ ██   ██ ██      ██ ███████ ███████", ANSI["bold"], ANSI["deep_violet"]),
-        _ansi("SHADOW STATS // PIXEL HUNTER INTERFACE", ANSI["bold"], ANSI["soft"]),
-    ]
 
-    lines = [*title_banner, "", *logo_lines, ""]
-    lines.append(_ansi_row(_ansi("[ SYSTEM ] Gate resonance confirmed", ANSI["bold"], ANSI["cyan"]), width, frame_color))
+    lines = [*title_banner, ""]
+    lines.append(_ansi_row(_ansi("[ SYSTEM ] Archive resonance confirmed", ANSI["bold"], ANSI["cyan"]), width, frame_color))
     lines.append(_ansi_row(_pair(
         _ansi(f"[ AWAKENING ] {awakening}", ANSI["bold"], ANSI["lavender"]),
-        _ansi(f"[ THREAT ] {threat}", ANSI["bold"], ANSI["gold"]),
+        _ansi(f"[ THREAT CLASS ] {threat}", ANSI["bold"], ANSI["gold"]),
         width,
     ), width, frame_color))
     lines.append(_ansi_row("", width, frame_color))
@@ -304,14 +296,14 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
         f"{_ansi('EXP', ANSI['dim'], ANSI['soft'])}  {_ansi(exp_bar, ANSI['bold'], ANSI['ice'])} {_ansi(f'{stats.exp_into_level}/{stats.exp_to_next_level}', ANSI['white'])} {_ansi(f'· {stats.total_exp} xp', ANSI['dim'], ANSI['gray'])}",
         width,
     ), width, frame_color))
-    traits = ", ".join(profile.achievements[:3]) if profile.achievements else "No traits unlocked yet"
+    traits = ", ".join(profile.achievements[:3]) if profile.achievements else "No feats awakened yet"
     trait_lines = _wrap_plain(traits, width - 10)
-    lines.append(_ansi_row(f"{_ansi('TRAITS', ANSI['dim'], ANSI['soft'])}  {_ansi(trait_lines[0], ANSI['soft'])}", width, frame_color))
+    lines.append(_ansi_row(f"{_ansi('FEATS', ANSI['dim'], ANSI['soft'])}  {_ansi(trait_lines[0], ANSI['soft'])}", width, frame_color))
     for extra_trait_line in trait_lines[1:]:
         lines.append(_ansi_row(f"{_ansi(' ', ANSI['dim'], ANSI['soft'])}        {_ansi(extra_trait_line, ANSI['soft'])}", width, frame_color))
 
     lines.append(_ansi_row("", width, frame_color))
-    lines.append(_ansi_row(_ansi_section("ATTRIBUTE MATRIX", width - 2, ANSI["lavender"]), width, frame_color))
+    lines.append(_ansi_row(_ansi_section("ATTRIBUTES", width - 2, ANSI["lavender"]), width, frame_color))
     stat_pairs = [(STAT_LABELS[0], STAT_LABELS[3]), (STAT_LABELS[1], STAT_LABELS[4]), (STAT_LABELS[2], STAT_LABELS[5])]
     for (l_label, l_attr), (r_label, r_attr) in stat_pairs:
         left_value = getattr(stats, l_attr)
@@ -325,22 +317,22 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
         lines.append(_ansi_row(_pair(left, right, width), width, frame_color))
 
     lines.append(_ansi_row("", width, frame_color))
-    lines.append(_ansi_row(_ansi_section("GROWTH ECHOES", width - 2, ANSI["ice"]), width, frame_color))
+    lines.append(_ansi_row(_ansi_section("DISCIPLINES", width - 2, ANSI["ice"]), width, frame_color))
     lines.append(_ansi_row(_pair(
-        f"skills {_ansi(str(scan.skill_count), ANSI['bold'], ANSI['white'])} // domains {_ansi(str(len(profile.dominant_domains)), ANSI['bold'], ANSI['white'])}",
-        f"sessions {_ansi(str(scan.session_file_count), ANSI['bold'], ANSI['white'])} // plugins {_ansi(str(scan.plugin_count), ANSI['bold'], ANSI['white'])}",
+        f"techniques {_ansi(str(scan.skill_count), ANSI['bold'], ANSI['white'])} // domains {_ansi(str(len(profile.dominant_domains)), ANSI['bold'], ANSI['white'])}",
+        f"records {_ansi(str(scan.session_file_count), ANSI['bold'], ANSI['white'])} // artifacts {_ansi(str(scan.plugin_count), ANSI['bold'], ANSI['white'])}",
         width,
     ), width, frame_color))
     lines.append(_ansi_row(_pair(
         f"memories {_ansi(str(scan.memory_entries), ANSI['bold'], ANSI['white'])} // user bonds {_ansi(str(scan.user_entries), ANSI['bold'], ANSI['white'])}",
-        f"cron {_ansi(str(scan.cron_file_count), ANSI['bold'], ANSI['white'])} // logs {_ansi(str(scan.log_file_count), ANSI['bold'], ANSI['white'])}",
+        f"rituals {_ansi(str(scan.cron_file_count), ANSI['bold'], ANSI['white'])} // logs {_ansi(str(scan.log_file_count), ANSI['bold'], ANSI['white'])}",
         width,
     ), width, frame_color))
     for wrapped in _wrap_plain(f"dominant domains // {domains}", width - 2):
         lines.append(_ansi_row(_ansi(wrapped, ANSI["soft"]), width, frame_color))
 
     lines.append(_ansi_row("", width, frame_color))
-    lines.append(_ansi_row(_ansi_section("DEEP SIGNALS", width - 2, ANSI["violet"]), width, frame_color))
+    lines.append(_ansi_row(_ansi_section("FIELD REPORT", width - 2, ANSI["violet"]), width, frame_color))
     scar_color = ANSI["red"] if scan.activity.session_error_mentions else ANSI["gray"]
     lines.append(_ansi_row(_pair(
         f"tool signatures {_ansi(str(scan.activity.session_tool_mentions), ANSI['bold'], ANSI['white'])}",
@@ -348,13 +340,13 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
         width,
     ), width, frame_color))
     lines.append(_ansi_row(_pair(
-        f"skill codex {_ansi(str(scan.activity.skill_words), ANSI['bold'], ANSI['white'])}",
+        f"codex words {_ansi(str(scan.activity.skill_words), ANSI['bold'], ANSI['white'])}",
         f"memory lines {_ansi(str(scan.activity.memory_lines), ANSI['bold'], ANSI['white'])}",
         width,
     ), width, frame_color))
     lines.append(_ansi_row(_pair(
         f"error scars {_ansi(str(scan.activity.session_error_mentions), ANSI['bold'], scar_color)}",
-        f"schedule glyphs {_ansi(str(scan.activity.cron_schedule_mentions), ANSI['bold'], ANSI['white'])}",
+        f"ritual glyphs {_ansi(str(scan.activity.cron_schedule_mentions), ANSI['bold'], ANSI['white'])}",
         width,
     ), width, frame_color))
 
@@ -367,8 +359,9 @@ def render_ansi_panel(profile: CharacterProfile) -> str:
         lines.append(_ansi_row(_ansi("No public achievements yet", ANSI["dim"], ANSI["gray"]), width, frame_color))
 
     lines.append(_ansi_row("", width, frame_color))
-    lines.append(_ansi_row(_ansi_section("NARRATIVE SUMMARY", width - 2, ANSI["soft"]), width, frame_color))
-    for wrapped in _wrap_plain(profile.summary, width - 2):
+    lines.append(_ansi_row(_ansi_section("PROFILE", width - 2, ANSI["soft"]), width, frame_color))
+    profile_summary = profile.summary.replace("A read-only shadow profile reconstructed from the ", "Reconstructed from ")
+    for wrapped in _wrap_plain(profile_summary, width - 2):
         lines.append(_ansi_row(_ansi(wrapped, ANSI["gray"]), width, frame_color))
 
     footer = _ansi("╰" + "─" * (width + 2) + "╯", ANSI["bold"], ANSI["deep_violet"])

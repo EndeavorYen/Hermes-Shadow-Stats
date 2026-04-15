@@ -47,10 +47,13 @@ def test_scan_and_render(tmp_path: Path) -> None:
     assert "github, research" in panel
     assert profile.primary_class in panel
     assert profile.title in panel
-    assert "HERMES SHADOW STATS" in ansi_panel
-    assert "status window // hunter interface" in ansi_panel
+    assert "HERMES SHADOW PROFILE" in ansi_panel
+    assert "awakened archive // status window" in ansi_panel
     assert "\x1b[" in ansi_panel
     assert "ACHIEVEMENTS" in ansi_panel
+    assert "ATTRIBUTES" in ansi_panel
+    assert "DISCIPLINES" in ansi_panel
+    assert "FIELD REPORT" in ansi_panel
     assert svg.startswith("<svg")
     assert "Status Window" in svg
     assert profile.title in svg

@@ -48,6 +48,13 @@ FLAVOR_TAGS = {
 }
 
 
+def _indefinite_article(text: str) -> str:
+    stripped = (text or "").strip().lower()
+    if not stripped:
+        return "a"
+    return "an" if stripped[0] in "aeiou" else "a"
+
+
 def _rank_for_level(level: int) -> str:
     rank = "Bronze"
     for minimum, label in RANK_TIERS:
@@ -214,9 +221,10 @@ def build_character_profile(scan: ScanSummary, name: str = "Hermes") -> Characte
 
     home_str = str(scan.hermes_home)
     home_label = home_str.rstrip("/").split("/")[-1] or home_str
+    article = _indefinite_article(primary_class)
     summary = (
         f"A read-only shadow profile reconstructed from the {home_label} archive. "
-        f"This entity currently manifests as a {primary_class.lower()} and {flavor}. "
+        f"This entity currently manifests as {article} {primary_class.lower()} and {flavor}. "
         f"It has learned {scan.skill_count} persistent skill(s) across {len(scan.skill_categories)} domain(s), "
         f"with {scan.activity.session_tool_mentions} observed tool-signatures in archived session traces."
     )
