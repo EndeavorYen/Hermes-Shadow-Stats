@@ -51,22 +51,18 @@ That makes it:
 This preview is generated from the stable synthetic demo profile under `examples/demo-hermes-home/`.
 
 ```text
-╭────────────────────────── HERMES SHADOW STATS ──────────────────────────╮
-│                    status window // hunter interface                    │
+╭───────────────────────── HERMES SHADOW PROFILE ─────────────────────────╮
+│                    persistent archive // status window                  │
 ╰──────────────────────────────────────────────────────────────────────────╯
 
-██   ██ ███████ ██████  ███    ███ ███████ ███████
-██   ██ ██      ██   ██ ████  ████ ██      ██
-███████ █████   ██████  ██ ████ ██ █████   ███████
-██   ██ ██      ██   ██ ██  ██  ██ ██           ██
-██   ██ ███████ ██   ██ ██      ██ ███████ ███████
-SHADOW STATS // PIXEL HUNTER INTERFACE
-
-│ [ SYSTEM ] Gate resonance confirmed                                            │
-│ [ AWAKENING ] Candidate Phase           [ THREAT ] High-tier hunter            │
-│ NAME  Demo Hermes                       TITLE  Ops Summoner Initiate           │
-│ CLASS  Ops Summoner ☾                   RANK  Bronze ◈                         │
-│ LEVEL  5                                EXP  ▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱ 14/50 · 214 xp   │
+│ [ STATUS ] Bronze rank // lvl 5         [ THREAT CLASS ] Field-ready hunter    │
+│ [ AWAKENING ] Candidate Phase           [ CLASS SIGIL ] Ops Summoner ~         │
+│                                                                                │
+│                                  Demo Hermes                                   │
+│                        Ops Summoner // Bronze + // Lv 5                        │
+│                             Ops Summoner Initiate                              │
+│ CLASS SIGIL  ~                          EXP  ▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱ 14/50 · 214 xp   │
+│ FEATS  Memory Spark, Artifact Binder, Ritual Keeper                            │
 ```
 
 This is the fantasy in one screen:

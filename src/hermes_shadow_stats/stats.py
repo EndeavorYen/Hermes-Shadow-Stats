@@ -115,7 +115,7 @@ def _build_achievements(scan: ScanSummary, primary_class: str, rank: str) -> lis
     total_memory = scan.memory_entries + scan.user_entries
 
     if total_memory > 0:
-        achievements.append("First Persistent Memory")
+        achievements.append("Memory Spark")
     if total_memory >= 10:
         achievements.append("Lorekeeper")
     if scan.skill_count >= 5:
@@ -125,7 +125,7 @@ def _build_achievements(scan: ScanSummary, primary_class: str, rank: str) -> lis
     if scan.activity.skill_words >= 5000:
         achievements.append("Codex Devourer")
     if scan.plugin_count >= 1:
-        achievements.append("Plugin Tinkerer")
+        achievements.append("Artifact Binder")
     if scan.plugin_count >= 3:
         achievements.append("Extension Architect")
     if scan.activity.plugin_hook_mentions >= 3:
@@ -135,9 +135,9 @@ def _build_achievements(scan: ScanSummary, primary_class: str, rank: str) -> lis
     if scan.profile_count >= 3:
         achievements.append("Multiform Traveler")
     if scan.cron_file_count >= 1:
-        achievements.append("Cron Tamer")
+        achievements.append("Ritual Keeper")
     if scan.activity.cron_schedule_mentions >= 3:
-        achievements.append("Scheduler Pact")
+        achievements.append("Clock Sigil")
     if scan.session_file_count >= 25:
         achievements.append("Battle-Tested Operator")
     if scan.session_file_count >= 100:

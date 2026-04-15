@@ -29,6 +29,8 @@ def test_scan_and_render(tmp_path: Path) -> None:
     profile = build_character_profile(scan, name="Hermes")
     panel = render_markdown(profile)
     ansi_panel = render_ansi_panel(profile)
+    compact_panel = render_ansi_panel(profile, banner_mode="compact", width=62)
+    minimal_panel = render_ansi_panel(profile, banner_mode="minimal", width=56)
     svg = render_svg_card(profile)
 
     assert scan.memory_entries == 3
@@ -48,12 +50,16 @@ def test_scan_and_render(tmp_path: Path) -> None:
     assert profile.primary_class in panel
     assert profile.title in panel
     assert "HERMES SHADOW PROFILE" in ansi_panel
-    assert "awakened archive // status window" in ansi_panel
+    assert "persistent archive // status window" in ansi_panel
     assert "\x1b[" in ansi_panel
     assert "ACHIEVEMENTS" in ansi_panel
     assert "ATTRIBUTES" in ansi_panel
     assert "DISCIPLINES" in ansi_panel
     assert "FIELD REPORT" in ansi_panel
+    assert "██   ██" in ansi_panel
+    assert "HERMES // SHADOW PROFILE // ANSI WINDOW" in compact_panel
+    assert "HERMES // SHADOW PROFILE" in minimal_panel
+    assert "status window // ansi mode" in minimal_panel
     assert svg.startswith("<svg")
     assert "Status Window" in svg
     assert profile.title in svg

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 from pathlib import Path
 
 from .renderer import render_ansi_panel, render_json, render_markdown, render_svg_card
@@ -22,6 +23,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         help="Optional file path for text/json/svg output. If omitted, prints to stdout.",
     )
+    parser.add_argument(
+        "--banner-mode",
+        choices=("auto", "wide", "compact", "minimal"),
+        default="auto",
+        help="Banner/logo mode for ANSI output. auto picks wide/compact/minimal from terminal width.",
+    )
     return parser
 
 
@@ -39,7 +46,9 @@ def main() -> int:
     if args.format == "json":
         rendered = render_json(profile)
     elif args.format in {"ansi", "ascii"}:
-        rendered = render_ansi_panel(profile)
+        term_columns = shutil.get_terminal_size(fallback=(100, 40)).columns
+        panel_width = max(56, min(78, term_columns - 4))
+        rendered = render_ansi_panel(profile, banner_mode=args.banner_mode, width=panel_width)
     elif args.format == "svg":
         rendered = render_svg_card(profile)
     else:
