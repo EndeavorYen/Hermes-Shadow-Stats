@@ -31,6 +31,9 @@ class ScanSummary:
     log_file_count: int
     cron_file_count: int
     activity: ActivitySignals
+    plugin_names: list[str] = field(default_factory=list)
+    recent_sessions: list[str] = field(default_factory=list)
+    top_skill_names: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -64,6 +67,13 @@ class CharacterProfile:
     scan: ScanSummary
     achievements: list[str] = field(default_factory=list)
     dominant_domains: list[str] = field(default_factory=list)
+    lang: str = "en"
+    primary_class_id: str = ""
+    rank_id: str = ""
+    achievement_ids: list[str] = field(default_factory=list)
+    buff_ids: list[str] = field(default_factory=list)
+    threat_id: str = ""
+    awakening_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

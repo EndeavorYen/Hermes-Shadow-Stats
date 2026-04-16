@@ -4,6 +4,7 @@ import argparse
 import shutil
 from pathlib import Path
 
+from . import i18n
 from .renderer import render_ansi_panel, render_json, render_markdown, render_svg_card
 from .scanner import scan_hermes_home
 from .stats import build_character_profile
@@ -29,6 +30,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="auto",
         help="Banner/logo mode for ANSI output. auto picks wide/compact/minimal from terminal width.",
     )
+    parser.add_argument(
+        "--lang",
+        choices=i18n.SUPPORTED_LANGS,
+        default=None,
+        help="Display language. Defaults to $LANG detection then 'en'.",
+    )
     return parser
 
 
@@ -40,8 +47,9 @@ def main() -> int:
     if not home.exists():
         parser.error(f"Hermes home does not exist: {home}")
 
+    lang = i18n.normalize_lang(args.lang) if args.lang else i18n.detect_lang()
     scan = scan_hermes_home(home)
-    profile = build_character_profile(scan=scan, name=args.name)
+    profile = build_character_profile(scan=scan, name=args.name, lang=lang)
 
     if args.format == "json":
         rendered = render_json(profile)

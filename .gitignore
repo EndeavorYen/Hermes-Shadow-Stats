@@ -1,6 +1,53 @@
-.venv/
+# Python bytecode
 __pycache__/
-*.pyc
-.pytest_cache/
-artifacts/
+*.py[cod]
+*$py.class
+
+# Python build / packaging
+build/
+dist/
 *.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.python-version
+
+# Test / coverage
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Project artifacts (regenerable scratch output)
+artifacts/
+
+# Tooling state (local-only, per-machine)
+.omc/
+.claude/

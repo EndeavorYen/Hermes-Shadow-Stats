@@ -107,12 +107,30 @@ def scan_hermes_home(hermes_home: str | Path) -> ScanSummary:
     user_entries = _count_bullet_entries(memories_dir / "USER.md")
 
     skill_categories: dict[str, int] = {}
+    skill_names: list[str] = []
     skill_count = 0
     if skills_dir.exists():
-        for skill_file in skills_dir.rglob("SKILL.md"):
+        for skill_file in sorted(skills_dir.rglob("SKILL.md")):
             skill_count += 1
             category = _categorize_skill(skill_file, home)
             skill_categories[category] = skill_categories.get(category, 0) + 1
+            relative = skill_file.relative_to(skills_dir)
+            parts = relative.parts
+            if len(parts) >= 2:
+                skill_names.append(f"{parts[0]}/{parts[-2]}")
+            else:
+                skill_names.append(relative.parent.name or relative.name)
+
+    plugin_names: list[str] = []
+    if plugins_dir.exists():
+        plugin_names = sorted(child.name for child in plugins_dir.iterdir() if child.is_dir())
+
+    recent_sessions: list[str] = []
+    if sessions_dir.exists():
+        recent_sessions = sorted(
+            (child.stem for child in sessions_dir.rglob("*") if child.is_file()),
+            reverse=True,
+        )[:5]
 
     return ScanSummary(
         hermes_home=str(home),
@@ -126,4 +144,7 @@ def scan_hermes_home(hermes_home: str | Path) -> ScanSummary:
         log_file_count=_count_files(logs_dir),
         cron_file_count=_count_files(cron_dir),
         activity=_scan_activity(home),
+        plugin_names=plugin_names,
+        recent_sessions=recent_sessions,
+        top_skill_names=skill_names[:5],
     )
