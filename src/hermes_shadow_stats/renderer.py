@@ -373,7 +373,6 @@ def render_markdown(profile: CharacterProfile) -> str:
 
 def _identity_block(profile: CharacterProfile, width: int, frame_color: str, lang: str, exp_bar: str, emblem: str, mode: str) -> list[str]:
     stats = profile.stats
-    rank_label = i18n.t_label(lang, "rank_word")
     lvl_label = i18n.t_label(lang, "level_compact")
     exp_label = i18n.t_label(lang, "exp")
     feats_label = i18n.t_label(lang, "feats")
@@ -714,3 +713,533 @@ def render_svg_card(profile: CharacterProfile) -> str:
 
 def render_json(profile: CharacterProfile) -> str:
     return json.dumps(profile.to_dict(), ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 additions — per-tab renderers for TUI and ``--format tabs``
+#
+# Each per-tab function returns a self-contained ANSI string for one RPG tab.
+# ``telemetry`` is accepted but ignored in Phase 1; Phase 3 populates it from
+# ``state.db`` (``SessionStats`` / ``TokenUsage`` / ``ToolUsage`` etc.).
+#
+# ``render_ansi_panel`` above remains unchanged and stays the authoritative
+# single-panel layout for ``--format ansi`` (parity-tested in
+# ``tests/test_renderer_parity.py``).
+# ---------------------------------------------------------------------------
+
+
+TAB_IDS: list[str] = [
+    "status",
+    "equipment",
+    "codex",
+    "journal",
+    "chronicle",
+    "rituals",
+    "effects",
+    "diagnostics",
+]
+
+
+def _frame_color() -> str:
+    return ANSI["indigo"]
+
+
+def _status_rows(profile: CharacterProfile, width: int, lang: str, mode: str) -> list[str]:
+    stats = profile.stats
+    frame_color = _frame_color()
+    emblem = _class_emblem(profile.primary_class_id)
+    bar_w = 18 if width >= 70 else 12
+    exp_bar = _bar(
+        stats.exp_into_level,
+        max(stats.exp_to_next_level, 1),
+        width=16,
+        filled="▰",
+        empty="▱",
+    )
+    lines: list[str] = []
+    lines.extend(_top_summary(profile, width, frame_color, lang, mode))
+    lines.append(_ansi_row("", width, frame_color))
+    lines.extend(_identity_block(profile, width, frame_color, lang, exp_bar, emblem, mode))
+
+    lines.append(_ansi_row("", width, frame_color))
+    lines.append(
+        _ansi_row(_ansi_section(i18n.t_section(lang, "vitals"), width - 2, ANSI["ice"]), width, frame_color)
+    )
+    for _, label, current, maximum, hint in _compute_vitals(profile):
+        ratio = current / maximum if maximum else 0
+        bar = _ansi(
+            _bar(current, maximum, width=bar_w, filled="▰", empty="▱"),
+            ANSI["bold"],
+            _vital_color(ratio),
+        )
+        readout = (
+            f"{_ansi(label, ANSI['bold'], ANSI['white'])}  {bar} "
+            f"{_ansi(f'{current:>3}/{maximum}', ANSI['white'])}  "
+            f"{_ansi(hint, ANSI['dim'], ANSI['gray'])}"
+        )
+        lines.append(_ansi_row(readout, width, frame_color))
+    xp_ratio = stats.exp_into_level / max(stats.exp_to_next_level, 1)
+    xp_bar_color = _ansi(
+        _bar(stats.exp_into_level, max(stats.exp_to_next_level, 1), width=bar_w, filled="▰", empty="▱"),
+        ANSI["bold"],
+        _vital_color(0.5 + xp_ratio / 2),
+    )
+    next_level_text = i18n.t_label(lang, "next_level").format(level=stats.level + 1, total=stats.total_exp)
+    lines.append(
+        _ansi_row(
+            f"{_ansi(i18n.t_label(lang, 'vital_xp_label'), ANSI['bold'], ANSI['white'])}  {xp_bar_color} "
+            f"{_ansi(f'{stats.exp_into_level:>3}/{stats.exp_to_next_level}', ANSI['white'])}  "
+            f"{_ansi(next_level_text, ANSI['dim'], ANSI['gray'])}",
+            width,
+            frame_color,
+        )
+    )
+
+    lines.append(_ansi_row("", width, frame_color))
+    lines.append(
+        _ansi_row(_ansi_section(i18n.t_section(lang, "attributes"), width - 2, ANSI["lavender"]), width, frame_color)
+    )
+    stat_pairs = [(STAT_LABELS[0], STAT_LABELS[3]), (STAT_LABELS[1], STAT_LABELS[4]), (STAT_LABELS[2], STAT_LABELS[5])]
+    for (l_label, l_attr), (r_label, r_attr) in stat_pairs:
+        lv = getattr(stats, l_attr)
+        rv = getattr(stats, r_attr)
+        lt = _stat_tier(lv)
+        rt = _stat_tier(rv)
+        lb = _ansi(_bar(lv, width=10, filled="■", empty="·"), ANSI["bold"], _tier_color(lt))
+        rb = _ansi(_bar(rv, width=10, filled="■", empty="·"), ANSI["bold"], _tier_color(rt))
+        left = f"{_ansi(l_label, ANSI['bold'], ANSI['white'])} {lv:>2} {lb} [{_ansi(lt, ANSI['bold'], _tier_color(lt))}]"
+        right = f"{_ansi(r_label, ANSI['bold'], ANSI['white'])} {rv:>2} {rb} [{_ansi(rt, ANSI['bold'], _tier_color(rt))}]"
+        lines.append(_ansi_row(_pair(left, right, width), width, frame_color))
+
+    return lines
+
+
+def _equipment_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_section(lang, "equipment"), width - 2, ANSI["gold"]),
+            width,
+            frame_color,
+        )
+    ]
+    slot_specs = [("main_slot", "main_hint", "◆"), ("aux_slot", "aux_hint", "◇"), ("sigil_slot", "sigil_hint", "✦")]
+    show_hints = width >= 70
+    for index, (slot_key, hint_key, glyph) in enumerate(slot_specs):
+        slot_label = i18n.t_label(lang, slot_key)
+        plugin_name = scan.plugin_names[index] if index < len(scan.plugin_names) else None
+        if plugin_name:
+            value = _ansi(plugin_name, ANSI["bold"], ANSI["white"])
+            status = _ansi(f"[ {i18n.t_label(lang, 'bound')} ]", ANSI["bold"], ANSI["ice"])
+        else:
+            value = _ansi(i18n.t_label(lang, "empty_slot"), ANSI["dim"], ANSI["gray"])
+            status = _ansi(f"[ {i18n.t_label(lang, 'empty')} ]", ANSI["dim"], ANSI["gray"])
+        slot_text = f"{_ansi(f'{glyph} {slot_label} ', ANSI['bold'], ANSI['gold'])} {value}"
+        if show_hints:
+            hint = f"{status} {_ansi(i18n.t_label(lang, hint_key), ANSI['dim'], ANSI['gray'])}"
+            lines.append(_ansi_row(_pair(slot_text, hint, width), width, frame_color))
+        else:
+            lines.append(_ansi_row(f"{slot_text}  {status}", width, frame_color))
+    extra = max(0, len(scan.plugin_names) - len(slot_specs))
+    if extra:
+        overflow = ", ".join(scan.plugin_names[len(slot_specs) : len(slot_specs) + 4])
+        lines.append(
+            _ansi_row(
+                _ansi(f"  + {extra} {i18n.t_label(lang, 'stowed')} // {overflow}", ANSI["dim"], ANSI["gray"]),
+                width,
+                frame_color,
+            )
+        )
+    return lines
+
+
+def _codex_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_section(lang, "disciplines"), width - 2, ANSI["ice"]),
+            width,
+            frame_color,
+        )
+    ]
+    domains = ", ".join(profile.dominant_domains[:3]) if profile.dominant_domains else "—"
+    lines.append(
+        _ansi_row(
+            _pair(
+                f"{i18n.t_label(lang, 'techniques')} {_ansi(str(scan.skill_count), ANSI['bold'], ANSI['white'])} // "
+                f"{i18n.t_label(lang, 'domains')} {_ansi(str(len(profile.dominant_domains)), ANSI['bold'], ANSI['white'])}",
+                f"{i18n.t_label(lang, 'records')} {_ansi(str(scan.session_file_count), ANSI['bold'], ANSI['white'])} // "
+                f"{i18n.t_label(lang, 'artifacts')} {_ansi(str(scan.plugin_count), ANSI['bold'], ANSI['white'])}",
+                width,
+            ),
+            width,
+            frame_color,
+        )
+    )
+    for wrapped in _wrap_plain(f"{i18n.t_label(lang, 'dominant_domains')} // {domains}", width - 4):
+        lines.append(_ansi_row(_ansi(f"· {wrapped}", ANSI["soft"]), width, frame_color))
+    if scan.skill_categories:
+        max_cat = max(scan.skill_categories.values())
+        sorted_cats = sorted(scan.skill_categories.items(), key=lambda kv: (-kv[1], kv[0]))
+        for category, count in sorted_cats[:6]:
+            cat_bar = _ansi(
+                _bar(count, max(max_cat, 1), width=12, filled="▰", empty="▱"),
+                ANSI["bold"],
+                ANSI["lavender"],
+            )
+            label = _pad_to(_ansi(category, ANSI["white"]), 22)
+            count_text = _ansi(f"{count:>2}", ANSI["bold"], ANSI["white"])
+            lines.append(_ansi_row(f"  {label}{cat_bar} {count_text}", width, frame_color))
+    # Top skill names (Phase 1 display limit 8 — full list available in scan.top_skill_names)
+    if scan.top_skill_names:
+        lines.append(_ansi_row(_ansi(f"· {i18n.t_label(lang, 'techniques')}:", ANSI["dim"], ANSI["soft"]), width, frame_color))
+        for name in scan.top_skill_names[:8]:
+            lines.append(_ansi_row(_ansi(f"    {name}", ANSI["gray"]), width, frame_color))
+    return lines
+
+
+def _journal_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_label(lang, "recent_expeditions"), width - 2, ANSI["violet"]),
+            width,
+            frame_color,
+        )
+    ]
+    # Phase 1 fallback: list recent session stems only (Phase 3 enriches from state.db).
+    if scan.recent_sessions:
+        for name in scan.recent_sessions[:10]:
+            lines.append(_ansi_row(_ansi(f"· {name}", ANSI["soft"]), width, frame_color))
+    else:
+        lines.append(_ansi_row(_ansi("· (none)", ANSI["dim"], ANSI["gray"]), width, frame_color))
+    return lines
+
+
+def _chronicle_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_section(lang, "field_report"), width - 2, ANSI["violet"]),
+            width,
+            frame_color,
+        )
+    ]
+    lines.append(
+        _ansi_row(
+            _pair(
+                f"{i18n.t_label(lang, 'tool_traces')} {_ansi(str(scan.activity.session_tool_mentions), ANSI['bold'], ANSI['white'])}",
+                f"{i18n.t_label(lang, 'hook_marks')} {_ansi(str(scan.activity.plugin_hook_mentions), ANSI['bold'], ANSI['white'])}",
+                width,
+            ),
+            width,
+            frame_color,
+        )
+    )
+    lines.append(
+        _ansi_row(
+            _pair(
+                f"{i18n.t_label(lang, 'codex_depth')} {_ansi(str(scan.activity.skill_words), ANSI['bold'], ANSI['white'])}",
+                f"{i18n.t_label(lang, 'memory_strands')} {_ansi(str(scan.activity.memory_lines), ANSI['bold'], ANSI['white'])}",
+                width,
+            ),
+            width,
+            frame_color,
+        )
+    )
+    lines.append(
+        _ansi_row(
+            _pair(
+                f"{i18n.t_label(lang, 'memories')} {_ansi(str(scan.memory_entries), ANSI['bold'], ANSI['white'])} // "
+                f"{i18n.t_label(lang, 'user_bonds')} {_ansi(str(scan.user_entries), ANSI['bold'], ANSI['white'])}",
+                f"{i18n.t_label(lang, 'echoes')} {_ansi(str(scan.log_file_count), ANSI['bold'], ANSI['white'])}",
+                width,
+            ),
+            width,
+            frame_color,
+        )
+    )
+    return lines
+
+
+def _rituals_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_label(lang, "rituals"), width - 2, ANSI["mint"]),
+            width,
+            frame_color,
+        )
+    ]
+    lines.append(
+        _ansi_row(
+            _pair(
+                f"{i18n.t_label(lang, 'rituals')} {_ansi(str(scan.cron_file_count), ANSI['bold'], ANSI['white'])}",
+                f"{i18n.t_label(lang, 'ritual_glyphs')} {_ansi(str(scan.activity.cron_schedule_mentions), ANSI['bold'], ANSI['white'])}",
+                width,
+            ),
+            width,
+            frame_color,
+        )
+    )
+    return lines
+
+
+def _effects_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_section(lang, "active_buffs"), width - 2, ANSI["violet"]),
+            width,
+            frame_color,
+        )
+    ]
+    if profile.buff_ids:
+        for buff_id in profile.buff_ids:
+            buff = i18n.t_buff(lang, buff_id)
+            glyph = "✗" if buff_id == "wounded" else "✦"
+            glyph_color = ANSI["red"] if buff_id == "wounded" else ANSI["gold"]
+            mod_color = ANSI["red"] if buff["modifier"].startswith("-") else ANSI["ice"]
+            name_pad = 18 if width >= 70 else 14
+            row = (
+                f"{_ansi(glyph, ANSI['bold'], glyph_color)} "
+                f"{_pad_to(_ansi(buff['name'], ANSI['bold'], ANSI['white']), name_pad)} "
+                f"{_ansi(buff['modifier'], ANSI['bold'], mod_color)}"
+            )
+            if width >= 70:
+                row += f"  {_ansi('‧ ' + buff['hint'], ANSI['dim'], ANSI['gray'])}"
+            lines.append(_ansi_row(row, width, frame_color))
+    else:
+        lines.append(
+            _ansi_row(_ansi(f"· {i18n.t_label(lang, 'no_buffs')}", ANSI["dim"], ANSI["gray"]), width, frame_color)
+        )
+
+    lines.append(_ansi_row("", width, frame_color))
+    lines.append(
+        _ansi_row(_ansi_section(i18n.t_section(lang, "achievements"), width - 2, ANSI["gold"]), width, frame_color)
+    )
+    if profile.achievements:
+        for achievement in profile.achievements[:8]:
+            lines.append(
+                _ansi_row(f"{_ansi('◆', ANSI['gold'], ANSI['bold'])} {achievement}", width, frame_color)
+            )
+    else:
+        lines.append(
+            _ansi_row(_ansi(i18n.t_label(lang, "no_achievements"), ANSI["dim"], ANSI["gray"]), width, frame_color)
+        )
+    return lines
+
+
+def _diagnostics_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    scar_color = ANSI["red"] if scan.activity.session_error_mentions else ANSI["gray"]
+    lines: list[str] = [
+        _ansi_row(
+            _ansi_section(i18n.t_label(lang, "error_scars"), width - 2, ANSI["red"]),
+            width,
+            frame_color,
+        )
+    ]
+    lines.append(
+        _ansi_row(
+            _pair(
+                f"{i18n.t_label(lang, 'error_scars')} {_ansi(str(scan.activity.session_error_mentions), ANSI['bold'], scar_color)}",
+                f"{i18n.t_label(lang, 'records')} {_ansi(str(scan.session_file_count), ANSI['bold'], ANSI['white'])}",
+                width,
+            ),
+            width,
+            frame_color,
+        )
+    )
+    return lines
+
+
+def _realm_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+    frame_color = _frame_color()
+    scan = profile.scan
+    home_path = scan.hermes_home
+    home_label = home_path.rstrip("/").split("/")[-1] or home_path
+    lines: list[str] = [
+        _ansi_row(_ansi_section(i18n.t_section(lang, "realm"), width - 2, ANSI["soft"]), width, frame_color),
+        _ansi_row(
+            _pair(
+                f"{_ansi('◷ ' + i18n.t_label(lang, 'realm_word'), ANSI['dim'], ANSI['soft'])}  "
+                f"{_ansi(home_label, ANSI['bold'], ANSI['white'])}",
+                f"{_ansi('◊ ' + i18n.t_label(lang, 'profiles_word'), ANSI['dim'], ANSI['soft'])}  "
+                f"{_ansi(str(scan.profile_count), ANSI['bold'], ANSI['white'])} {i18n.t_label(lang, 'bound_word')}",
+                width,
+            ),
+            width,
+            frame_color,
+        ),
+    ]
+    for wrapped in _wrap_plain(f"{i18n.t_label(lang, 'path_word')} // {home_path}", width - 4):
+        lines.append(_ansi_row(_ansi(f"  {wrapped}", ANSI["dim"], ANSI["gray"]), width, frame_color))
+    # Profile summary appended as part of Status/Realm overview.
+    lines.append(_ansi_row("", width, frame_color))
+    lines.append(_ansi_row(_ansi_section(i18n.t_section(lang, "profile"), width - 2, ANSI["soft"]), width, frame_color))
+    for wrapped in _wrap_plain(profile.summary, width - 2):
+        lines.append(_ansi_row(_ansi(wrapped, ANSI["gray"]), width, frame_color))
+    return lines
+
+
+def _resolve_tab_width(width: int | None) -> int:
+    return width or 78
+
+
+def render_status_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001  -- Phase 3 populates
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    mode = _resolve_banner_mode(width, "auto")
+    rows = _status_rows(profile, width, lang, mode)
+    rows.append(_ansi_row("", width, _frame_color()))
+    rows.extend(_realm_rows(profile, width, lang))
+    return "\n".join(rows)
+
+
+def render_equipment_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_equipment_rows(profile, width, lang))
+
+
+def render_codex_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_codex_rows(profile, width, lang))
+
+
+def render_journal_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_journal_rows(profile, width, lang))
+
+
+def render_chronicle_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_chronicle_rows(profile, width, lang))
+
+
+def render_rituals_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_rituals_rows(profile, width, lang))
+
+
+def render_effects_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_effects_rows(profile, width, lang))
+
+
+def render_diagnostics_tab(
+    profile: CharacterProfile,
+    *,
+    width: int | None = None,
+    lang: str | None = None,
+    telemetry: object | None = None,  # noqa: ARG001
+) -> str:
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(lang or profile.lang)
+    return "\n".join(_diagnostics_rows(profile, width, lang))
+
+
+_TAB_RENDERERS = {
+    "status": render_status_tab,
+    "equipment": render_equipment_tab,
+    "codex": render_codex_tab,
+    "journal": render_journal_tab,
+    "chronicle": render_chronicle_tab,
+    "rituals": render_rituals_tab,
+    "effects": render_effects_tab,
+    "diagnostics": render_diagnostics_tab,
+}
+
+
+def render_tab(tab_id: str, profile: CharacterProfile, **kwargs) -> str:
+    """Dispatch helper — returns a tab's rendered string by id."""
+    try:
+        fn = _TAB_RENDERERS[tab_id]
+    except KeyError as err:  # pragma: no cover - defensive
+        raise ValueError(f"Unknown tab id: {tab_id!r}. Known: {list(_TAB_RENDERERS)}") from err
+    return fn(profile, **kwargs)
+
+
+def render_static_tabs_panel(
+    profile: CharacterProfile,
+    banner_mode: str = "auto",
+    width: int | None = None,
+    telemetry: object | None = None,
+) -> str:
+    """Render all 8 tabs concatenated for ``--format tabs`` static export.
+
+    Note: this is a NEW output format; it does NOT replace ``render_ansi_panel``
+    which remains the ``--format ansi`` single-panel output (parity-tested).
+    """
+    width = _resolve_tab_width(width)
+    lang = i18n.normalize_lang(profile.lang)
+    mode = _resolve_banner_mode(width, banner_mode)
+    frame_color = _frame_color()
+
+    lines: list[str] = []
+    lines.extend(_system_window_banner(width, lang, mode))
+    lines.append("")
+
+    for tab_id in TAB_IDS:
+        title = i18n.t_label(lang, f"tab_{tab_id}")
+        divider = _ansi_section(title, width - 2, ANSI["lavender"])
+        lines.append(_ansi_row(divider, width, frame_color))
+        lines.append(render_tab(tab_id, profile, width=width, lang=lang, telemetry=telemetry))
+        lines.append(_ansi_row("", width, frame_color))
+
+    lines.append(_ansi(f"╰{'─' * (width + 2)}╯", ANSI["bold"], ANSI["deep_violet"]))
+    return "\n".join(lines)

@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from . import i18n
-from .models import CharacterProfile, ScanSummary, StatBlock
+from .models import (
+    CharacterProfile,
+    Equipment,
+    ScanSummary,
+    StatBlock,
+    TelemetrySnapshot,
+)
 
 
 RANK_TIERS: list[tuple[int, str]] = [
@@ -197,7 +203,91 @@ def _compute_stats(scan: ScanSummary, total_exp: int) -> StatBlock:
     )
 
 
-def build_character_profile(scan: ScanSummary, name: str = "Hermes", lang: str = "en") -> CharacterProfile:
+def _clamp_stat(value: float) -> int:
+    """Clamp a computed stat to the 0..20 attribute range (rounded)."""
+    return max(0, min(20, round(value)))
+
+
+def _compute_telemetry_attributes(
+    telemetry: TelemetrySnapshot,
+) -> dict[str, int]:
+    """Compute the 6 Phase-2 attributes from telemetry (plan W2.5).
+
+    Each attribute is clamped to the [0, 20] range the renderer expects.
+    """
+    sessions = telemetry.recent_sessions
+    session_count = max(len(sessions), 1)
+
+    # ENDURANCE — average session duration in minutes (longer runs → higher).
+    durations = [s.duration_seconds or 0.0 for s in sessions]
+    avg_minutes = (sum(durations) / session_count) / 60.0 if durations else 0.0
+    endurance = _clamp_stat(4 + avg_minutes / 15.0)
+
+    # PRECISION — inverse error-rate proxy via ``ended_at IS NULL`` + end_reason.
+    # A session without ended_at or with end_reason == "compression" is treated
+    # as a partial / retried run (Appendix B: no universal "error" value).
+    partials = sum(
+        1 for s in sessions if s.ended_at is None or s.end_reason == "compression"
+    )
+    error_rate = partials / session_count
+    precision = _clamp_stat(20 * (1.0 - error_rate))
+
+    # RESONANCE — lifetime cache hit rate (cache_read / (cache_read + input)).
+    resonance = _clamp_stat(20 * telemetry.lifetime_tokens.cache_hit_rate)
+
+    # CLARITY — reasoning-token ratio (depth of thought per output).
+    tokens = telemetry.lifetime_tokens
+    reasoning_ratio = (
+        tokens.reasoning_tokens / tokens.output_tokens if tokens.output_tokens else 0.0
+    )
+    clarity = _clamp_stat(20 * reasoning_ratio)
+
+    # REACH — model diversity proxy (lacking per-model context-window data in
+    # state.db v6). 3 distinct models ⇒ 9 points; clamp at 20.
+    reach = _clamp_stat(3 * len(telemetry.model_usage))
+
+    # TEMPO — average tool-calls-per-minute across sessions.
+    def _tcpm(s) -> float:
+        dur_min = (s.duration_seconds or 0.0) / 60.0
+        return s.tool_call_count / dur_min if dur_min > 0 else 0.0
+
+    tempos = [_tcpm(s) for s in sessions if (s.duration_seconds or 0) > 0]
+    avg_tempo = sum(tempos) / len(tempos) if tempos else 0.0
+    tempo = _clamp_stat(4 * avg_tempo)
+
+    return {
+        "endurance": endurance,
+        "precision": precision,
+        "resonance": resonance,
+        "clarity": clarity,
+        "reach": reach,
+        "tempo": tempo,
+    }
+
+
+def _build_equipment(telemetry: TelemetrySnapshot | None, scan: ScanSummary) -> Equipment:
+    """Correct Equipment mapping (plan W2.6) — replaces plugin_names[:3] hack."""
+    main_weapon: str | None = None
+    hotbar: list = []
+    if telemetry is not None:
+        if telemetry.recent_sessions:
+            main_weapon = telemetry.recent_sessions[0].model
+        hotbar = list(telemetry.top_tools[:5])
+    return Equipment(
+        main_weapon=main_weapon,
+        armor_slots=list(scan.plugin_names),
+        trinkets=list(scan.toolset_names),
+        hotbar=hotbar,
+    )
+
+
+def build_character_profile(
+    scan: ScanSummary,
+    name: str = "Hermes",
+    lang: str = "en",
+    telemetry: TelemetrySnapshot | None = None,
+    fallback_reason: str | None = None,
+) -> CharacterProfile:
     lang = i18n.normalize_lang(lang)
     total_exp = _compute_total_exp(scan)
     stats = _compute_stats(scan, total_exp)
@@ -211,6 +301,32 @@ def build_character_profile(scan: ScanSummary, name: str = "Hermes", lang: str =
     buff_ids = _build_buff_ids(scan)
     threat_id = _threat_id(scan, len(domains))
     awakening_id = _awakening_id(stats.level)
+
+    # Phase 2: populate the 6 new attributes when telemetry is available;
+    # leave as None (StatBlock default) when falling back to the file scanner
+    # so the renderer can show a "data unavailable" hint.
+    if telemetry is not None:
+        extras = _compute_telemetry_attributes(telemetry)
+        stats = StatBlock(
+            level=stats.level,
+            exp_into_level=stats.exp_into_level,
+            exp_to_next_level=stats.exp_to_next_level,
+            total_exp=stats.total_exp,
+            strength=stats.strength,
+            intelligence=stats.intelligence,
+            wisdom=stats.wisdom,
+            agility=stats.agility,
+            charisma=stats.charisma,
+            luck=stats.luck,
+            endurance=extras["endurance"],
+            precision=extras["precision"],
+            resonance=extras["resonance"],
+            clarity=extras["clarity"],
+            reach=extras["reach"],
+            tempo=extras["tempo"],
+        )
+
+    equipment = _build_equipment(telemetry, scan)
 
     class_info = i18n.t_class(lang, primary_class_id)
     primary_class_name = class_info["name"]
@@ -245,4 +361,7 @@ def build_character_profile(scan: ScanSummary, name: str = "Hermes", lang: str =
         buff_ids=buff_ids,
         threat_id=threat_id,
         awakening_id=awakening_id,
+        telemetry=telemetry,
+        equipment=equipment,
+        fallback_reason=fallback_reason,
     )

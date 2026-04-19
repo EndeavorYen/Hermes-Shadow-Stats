@@ -125,12 +125,19 @@ def scan_hermes_home(hermes_home: str | Path) -> ScanSummary:
     if plugins_dir.exists():
         plugin_names = sorted(child.name for child in plugins_dir.iterdir() if child.is_dir())
 
+    # W2.6b: enumerate ~/.hermes/toolsets/* for Equipment.trinkets mapping.
+    toolsets_dir = home / "toolsets"
+    toolset_names: list[str] = []
+    if toolsets_dir.exists():
+        toolset_names = sorted(child.name for child in toolsets_dir.iterdir() if child.is_dir())
+
+    # Phase 1 W1.4: scanner returns FULL lists; renderers apply display limits.
     recent_sessions: list[str] = []
     if sessions_dir.exists():
         recent_sessions = sorted(
             (child.stem for child in sessions_dir.rglob("*") if child.is_file()),
             reverse=True,
-        )[:5]
+        )
 
     return ScanSummary(
         hermes_home=str(home),
@@ -146,5 +153,6 @@ def scan_hermes_home(hermes_home: str | Path) -> ScanSummary:
         activity=_scan_activity(home),
         plugin_names=plugin_names,
         recent_sessions=recent_sessions,
-        top_skill_names=skill_names[:5],
+        top_skill_names=skill_names,
+        toolset_names=toolset_names,
     )

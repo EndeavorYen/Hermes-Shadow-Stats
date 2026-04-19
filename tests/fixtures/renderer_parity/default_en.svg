@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="720" viewBox="0 0 980 720" role="img" aria-label="Hermes Shadow Stats card">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0c14"/>
+      <stop offset="100%" stop-color="#141726"/>
+    </linearGradient>
+    <linearGradient id="accentGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c9d1d9"/>
+      <stop offset="100%" stop-color="#edf2f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="720" fill="url(#bg)"/>
+  <rect x="28" y="24" width="924" height="672" rx="26" fill="#09090f" stroke="#c9d1d9" stroke-width="2"/>
+  <rect x="28" y="24" width="924" height="80" rx="26" fill="#11131a"/>
+  <text x="42" y="58" font-size="16" fill="#edf2f7" font-family="Inter, Arial, sans-serif">HERMES SHADOW PROFILE</text>
+  <text x="42" y="84" font-size="28" fill="#f5f7fb" font-family="Inter, Arial, sans-serif" font-weight="700">PROFILE</text>
+  <text x="700" y="58" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">THREAT CLASS</text>
+  <text x="700" y="84" font-size="22" fill="#edf2f7" font-family="Inter, Arial, sans-serif" font-weight="700">Archive anomaly</text>
+  <rect x="42" y="126" width="330" height="540" rx="20" fill="#11131a" stroke="#232838"/>
+  <rect x="390" y="126" width="262" height="270" rx="20" fill="#11131a" stroke="#232838"/>
+  <rect x="670" y="126" width="262" height="270" rx="20" fill="#11131a" stroke="#232838"/>
+  <rect x="390" y="414" width="542" height="252" rx="20" fill="#11131a" stroke="#232838"/>
+  <text x="42" y="160" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">STATUS</text>
+  <text x="42" y="198" font-size="34" fill="#f5f7fb" font-family="Inter, Arial, sans-serif" font-weight="700">Hermes</text>
+  <text x="42" y="228" font-size="18" fill="#edf2f7" font-family="Inter, Arial, sans-serif">Shadow Commander Pathfinder</text>
+  <text x="42" y="278" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">CLASS SIGIL</text>
+  <text x="42" y="304" font-size="22" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">Shadow Commander</text>
+  <text x="200" y="278" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">RANK</text>
+  <text x="200" y="304" font-size="22" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">Silver</text>
+  <text x="42" y="352" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">LVL</text>
+  <text x="42" y="384" font-size="42" fill="#edf2f7" font-family="Inter, Arial, sans-serif" font-weight="700">15</text>
+  <text x="150" y="352" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">EXP</text>
+  <text x="150" y="384" font-size="24" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">745</text>
+  <rect x="42" y="442" width="280" height="16" rx="8" fill="#242938"/>
+  <rect x="42" y="442" width="378" height="16" rx="8" fill="url(#accentGlow)"/>
+  <text x="42" y="480" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">45/50</text>
+  <text x="42" y="222" font-size="15" fill="#aab2c5" font-family="Inter, Arial, sans-serif">STR</text><rect x="105" y="208" width="220" height="12" rx="6" fill="#242938"/><rect x="105" y="208" width="154" height="12" rx="6" fill="#c9d1d9"/><text x="338" y="222" font-size="15" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">14</text><text x="42" y="258" font-size="15" fill="#aab2c5" font-family="Inter, Arial, sans-serif">INT</text><rect x="105" y="244" width="220" height="12" rx="6" fill="#242938"/><rect x="105" y="244" width="220" height="12" rx="6" fill="#c9d1d9"/><text x="338" y="258" font-size="15" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">20</text><text x="42" y="294" font-size="15" fill="#aab2c5" font-family="Inter, Arial, sans-serif">WIS</text><rect x="105" y="280" width="220" height="12" rx="6" fill="#242938"/><rect x="105" y="280" width="176" height="12" rx="6" fill="#c9d1d9"/><text x="338" y="294" font-size="15" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">16</text><text x="42" y="330" font-size="15" fill="#aab2c5" font-family="Inter, Arial, sans-serif">AGI</text><rect x="105" y="316" width="220" height="12" rx="6" fill="#242938"/><rect x="105" y="316" width="176" height="12" rx="6" fill="#c9d1d9"/><text x="338" y="330" font-size="15" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">16</text><text x="42" y="366" font-size="15" fill="#aab2c5" font-family="Inter, Arial, sans-serif">CHA</text><rect x="105" y="352" width="220" height="12" rx="6" fill="#242938"/><rect x="105" y="352" width="154" height="12" rx="6" fill="#c9d1d9"/><text x="338" y="366" font-size="15" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">14</text><text x="42" y="402" font-size="15" fill="#aab2c5" font-family="Inter, Arial, sans-serif">LUK</text><rect x="105" y="388" width="220" height="12" rx="6" fill="#242938"/><rect x="105" y="388" width="110" height="12" rx="6" fill="#c9d1d9"/><text x="338" y="402" font-size="15" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">10</text>
+  <text x="410" y="160" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">DISCIPLINES</text>
+  <text x="410" y="194" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">techniques: 15</text>
+  <text x="410" y="222" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">dominant domains: misc, github, research</text>
+  <text x="410" y="250" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">memories: 5</text>
+  <text x="410" y="278" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">user bonds: 3</text>
+  <text x="410" y="306" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">records: 50</text>
+  <text x="410" y="334" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">rituals: 2</text>
+  <text x="410" y="362" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">artifacts: 3</text>
+  <text x="690" y="160" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">FIELD REPORT</text>
+  <text x="690" y="194" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">tool traces: 85</text>
+  <text x="690" y="222" font-size="16" fill="#ef4444" font-family="Inter, Arial, sans-serif">error scars: 4</text>
+  <text x="690" y="250" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">codex depth: 2000</text>
+  <text x="690" y="278" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">hook marks: 6</text>
+  <text x="690" y="306" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">ritual glyphs: 5</text>
+  <text x="690" y="334" font-size="16" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">memory strands: 40</text>
+  <text x="410" y="448" font-size="14" fill="#aab2c5" font-family="Inter, Arial, sans-serif">ACHIEVEMENTS</text>
+  <text x="420" y="508" font-size="14" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">• Memory Spark</text><text x="420" y="532" font-size="14" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">• Skill Archivist</text><text x="420" y="556" font-size="14" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">• Artifact Binder</text><text x="420" y="580" font-size="14" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">• Extension Architect</text><text x="420" y="604" font-size="14" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">• Hook Whisperer</text><text x="420" y="628" font-size="14" fill="#f5f7fb" font-family="Inter, Arial, sans-serif">• Profile Wanderer</text>
+  <text x="410" y="658" font-size="13" fill="#aab2c5" font-family="Inter, Arial, sans-serif">Reconstructed from the .hermes archive. This entity currently manifests as a shadow commande</text>
+</svg>

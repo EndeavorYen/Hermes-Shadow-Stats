@@ -12,7 +12,9 @@ license = { text = "MIT" }
 authors = [
   { name = "EndeavorYen" }
 ]
-dependencies = []
+dependencies = [
+  "textual>=0.80,<2.0",
+]
 
 [project.scripts]
 hermes-shadow-stats = "hermes_shadow_stats.cli:main"
@@ -25,3 +27,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "benchmark: performance/benchmark test (opt-in, run with -m benchmark)",
+]
+addopts = "-m 'not benchmark'"
