@@ -223,12 +223,11 @@ def _compute_telemetry_attributes(
     avg_minutes = (sum(durations) / session_count) / 60.0 if durations else 0.0
     endurance = _clamp_stat(4 + avg_minutes / 15.0)
 
-    # PRECISION — inverse error-rate proxy via ``ended_at IS NULL`` + end_reason.
-    # A session without ended_at or with end_reason == "compression" is treated
-    # as a partial / retried run (Appendix B: no universal "error" value).
-    partials = sum(
-        1 for s in sessions if s.ended_at is None or s.end_reason == "compression"
-    )
+    # PRECISION — inverse incomplete-session rate. Only ``ended_at IS NULL``
+    # flags an incomplete run; compression is a normal split (Appendix B)
+    # and is already surfaced in the Overheat vital, so it must NOT
+    # double-count here.
+    partials = sum(1 for s in sessions if s.ended_at is None)
     error_rate = partials / session_count
     precision = _clamp_stat(20 * (1.0 - error_rate))
 

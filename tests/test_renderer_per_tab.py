@@ -106,15 +106,16 @@ def test_empty_profile_does_not_crash(empty_profile, lang: str, tab_id: str) -> 
 
 @pytest.mark.parametrize("tab_id", TAB_IDS)
 def test_telemetry_parameter_accepted(populated_profile, tab_id: str) -> None:
-    """Phase 3 will populate ``telemetry``; Phase 1 must accept it as kwarg."""
+    """Every tab must accept ``telemetry`` (None or TelemetrySnapshot) without crashing."""
+    from hermes_shadow_stats.models import TelemetrySnapshot
+
     fn = TAB_FUNCS[tab_id]
     out = fn(populated_profile, width=78, lang="en", telemetry=None)
     assert out
-    # Non-None telemetry (opaque object) must be accepted without crash.
-    sentinel = object()
-    out2 = fn(populated_profile, width=78, lang="en", telemetry=sentinel)
-    # Phase 1 ignores the payload — output must be identical to telemetry=None.
-    assert out == out2, f"{tab_id} changed output based on telemetry in Phase 1"
+    # Passing an empty TelemetrySnapshot must not crash.
+    empty_snap = TelemetrySnapshot()
+    out2 = fn(populated_profile, width=78, lang="en", telemetry=empty_snap)
+    assert out2
 
 
 @pytest.mark.parametrize("tab_id", TAB_IDS)

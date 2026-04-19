@@ -426,17 +426,14 @@ def load_telemetry(
         return (None, "no-state-db")
     try:
         with reader:
-            conn = reader._open_if_possible()  # noqa: SLF001 — intentional probe
-            if conn is None:
-                return (None, "state-db-unreadable")
             ok, _version = reader.schema_ok()
             if not ok:
                 return (None, "schema-fallback")
             try:
                 return (reader.build_telemetry_snapshot(), None)
-            except sqlite3.Error as err:
+            except (sqlite3.Error, ValueError, TypeError, OSError) as err:
                 _log.debug("build_telemetry_snapshot failed: %r", err)
                 return (None, "state-db-unreadable")
-    except sqlite3.Error as err:
+    except (sqlite3.Error, OSError) as err:
         _log.debug("load_telemetry unexpected error: %r", err)
         return (None, "state-db-unreadable")

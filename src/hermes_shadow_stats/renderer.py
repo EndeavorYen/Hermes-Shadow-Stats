@@ -5,7 +5,7 @@ import re
 from html import escape
 
 from . import i18n
-from .models import CharacterProfile
+from .models import CharacterProfile, TelemetrySnapshot
 
 
 STAT_LABELS = [
@@ -49,6 +49,32 @@ ANSI = {
 
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+# Escape / control characters that must be stripped from any untrusted string
+# before it is concatenated into ANSI output. We're intentionally strict:
+# even SGR (colour) codes are removed so a malicious state.db cannot override
+# the renderer's own styling. Callers who want styling must wrap the cleaned
+# value with ``_ansi()`` themselves.
+_UNSAFE_ESCAPE_RE = re.compile(
+    r"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)"  # OSC sequences
+    r"|\x1b\[[0-9;?]*[A-Za-z]"             # all CSI sequences (including SGR)
+    r"|\x1b[\]P^_][^\x07\x1b]*\x1b\\"      # DCS/PM/APC/SOS
+    r"|\x1b."                               # anything else starting with ESC
+    r"|[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]"  # C0/DEL controls
+)
+
+
+def _safe_text(value: str | None, fallback: str = "—") -> str:
+    """Return ``value`` with every escape / control byte stripped.
+
+    Used for any field that originates in ``~/.hermes/state.db`` or the
+    filesystem before it enters the ANSI pipeline (``session.model``,
+    ``tool.tool_name``, ``session.title``, plugin directory names …). Even
+    benign SGR colour codes are removed — the renderer owns styling.
+    """
+    if value is None:
+        return fallback
+    return _UNSAFE_ESCAPE_RE.sub("", value)
 
 
 def _bar(value: int, max_value: int = 20, width: int = 10, filled: str = "■", empty: str = "□") -> str:
@@ -740,11 +766,171 @@ TAB_IDS: list[str] = [
 ]
 
 
+# Verified end_reason vocabulary (Appendix B of the ralplan). Any value outside
+# this map is bucketed into "other" by ``_end_reason_label``.
+_END_REASON_KEYS: dict[str, str] = {
+    "compression": "end_reason_compression",
+    "cron_complete": "end_reason_cron_complete",
+    "user_exit": "end_reason_user_exit",
+    "session_reset": "end_reason_session_reset",
+    "session_switch": "end_reason_session_switch",
+    "new_session": "end_reason_new_session",
+    "resumed_other": "end_reason_resumed_other",
+    "branched": "end_reason_branched",
+    "cli_close": "end_reason_cli_close",
+    "done": "end_reason_done",
+}
+
+
 def _frame_color() -> str:
     return ANSI["indigo"]
 
 
-def _status_rows(profile: CharacterProfile, width: int, lang: str, mode: str) -> list[str]:
+def _fallback_banner(lang: str, reason: str | None, width: int) -> list[str]:
+    """Render a one-row banner describing why telemetry is unavailable.
+
+    Returns an empty list when ``reason`` is ``None`` so callers can always
+    splice the result into a row list without a conditional.
+    """
+    if not reason:
+        return []
+    frame_color = _frame_color()
+    key = {
+        "no-state-db": "fallback_no_state_db",
+        "schema-fallback": "fallback_schema",
+        "state-db-unreadable": "fallback_unreadable",
+    }.get(reason, "fallback_unreadable")
+    tag = _ansi(
+        f"[ {i18n.t_label(lang, 'fallback_banner_prefix')} ]",
+        ANSI["bold"],
+        ANSI["amber"],
+    )
+    msg = _ansi(i18n.t_label(lang, key), ANSI["dim"], ANSI["gray"])
+    return [_ansi_row(f"{tag} {msg}", width, frame_color)]
+
+
+def _end_reason_label(value: str | None, lang: str) -> str:
+    """Map a raw ``end_reason`` cell to its i18n label (verified vocabulary)."""
+    if value is None or value == "":
+        return i18n.t_label(lang, "end_reason_open")
+    key = _END_REASON_KEYS.get(value)
+    return i18n.t_label(lang, key) if key else i18n.t_label(lang, "end_reason_other")
+
+
+def _compute_telemetry_vitals(
+    profile: CharacterProfile, telemetry: TelemetrySnapshot
+) -> list[tuple[str, str, int, int, str]]:
+    """Telemetry-driven HP/MP override (plan W2.5).
+
+    Falls back to the scanner-derived SP row so the Status tab still feels
+    complete when telemetry partially populated.
+    """
+    lang = profile.lang
+    # HP — each compression event drains 5 HP, capped at -90 (floor 10).
+    # Overheat side-row shows the same raw count for context.
+    hp_max = 100
+    hp_cur = max(10, hp_max - min(90, telemetry.compression_events * 5))
+    # MP — cache hit rate directly scaled.
+    mp_max = 100
+    mp_cur = int(round(min(1.0, max(0.0, telemetry.lifetime_tokens.cache_hit_rate)) * 100))
+    # SP — scanner heuristic (no rate_limit data in schema v6; v0.3 upgrade).
+    activity = profile.scan.activity
+    sp_max = 100
+    sp_cur = min(
+        sp_max,
+        18
+        + min(60, activity.session_tool_mentions)
+        + min(15, profile.scan.session_file_count // 4),
+    )
+    return [
+        (
+            "hp",
+            i18n.t_label(lang, "vital_hp_label"),
+            hp_cur,
+            hp_max,
+            i18n.t_label(lang, "vital_hp_hint"),
+        ),
+        (
+            "mp",
+            i18n.t_label(lang, "vital_mp_label"),
+            mp_cur,
+            mp_max,
+            i18n.t_label(lang, "vital_mp_hint"),
+        ),
+        (
+            "sp",
+            i18n.t_label(lang, "vital_sp_label"),
+            sp_cur,
+            sp_max,
+            i18n.t_label(lang, "vital_sp_hint"),
+        ),
+    ]
+
+
+def _telemetry_side_rows(
+    telemetry: TelemetrySnapshot, width: int, lang: str
+) -> list[str]:
+    """Telemetry-only side rows (Focus/Overheat/Gold) for the Status tab."""
+    frame_color = _frame_color()
+    session_count = max(telemetry.session_count, 1)
+    total_msg = sum(s.message_count for s in telemetry.recent_sessions)
+    total_tools = sum(s.tool_call_count for s in telemetry.recent_sessions)
+    focus = total_msg / max(total_tools, 1)
+    overheat = telemetry.compression_events
+    gold = telemetry.lifetime_cost.total_usd
+
+    rows: list[str] = []
+    rows.append(
+        _ansi_row(
+            f"{_ansi(i18n.t_label(lang, 'vital_focus_label'), ANSI['bold'], ANSI['white'])}  "
+            f"{_ansi(f'{focus:>5.2f}', ANSI['bold'], ANSI['ice'])}  "
+            f"{_ansi(i18n.t_label(lang, 'vital_focus_hint'), ANSI['dim'], ANSI['gray'])}",
+            width,
+            frame_color,
+        )
+    )
+    overheat_color = ANSI["red"] if overheat > 0 else ANSI["mint"]
+    rows.append(
+        _ansi_row(
+            f"{_ansi(i18n.t_label(lang, 'vital_overheat_label'), ANSI['bold'], ANSI['white'])}  "
+            f"{_ansi(f'{overheat:>5}', ANSI['bold'], overheat_color)}  "
+            f"{_ansi(i18n.t_label(lang, 'vital_overheat_hint'), ANSI['dim'], ANSI['gray'])}",
+            width,
+            frame_color,
+        )
+    )
+    rows.append(
+        _ansi_row(
+            f"{_ansi(i18n.t_label(lang, 'vital_gold_label'), ANSI['bold'], ANSI['white'])}  "
+            f"{_ansi(f'${gold:>7.4f}', ANSI['bold'], ANSI['gold'])}  "
+            f"{_ansi(i18n.t_label(lang, 'vital_gold_hint'), ANSI['dim'], ANSI['gray'])}",
+            width,
+            frame_color,
+        )
+    )
+    # Silence linter (session_count referenced only for clarity above).
+    _ = session_count
+    return rows
+
+
+# Extended attribute grid (6 new attrs). Row layout matches STAT_LABELS pairs.
+_EXTENDED_STAT_LABELS: list[tuple[str, str]] = [
+    ("stat_end_label", "endurance"),
+    ("stat_cla_label", "clarity"),
+    ("stat_pre_label", "precision"),
+    ("stat_rea_label", "reach"),
+    ("stat_res_label", "resonance"),
+    ("stat_tem_label", "tempo"),
+]
+
+
+def _status_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    mode: str,
+    telemetry: TelemetrySnapshot | None = None,
+) -> list[str]:
     stats = profile.stats
     frame_color = _frame_color()
     emblem = _class_emblem(profile.primary_class_id)
@@ -757,6 +943,9 @@ def _status_rows(profile: CharacterProfile, width: int, lang: str, mode: str) ->
         empty="▱",
     )
     lines: list[str] = []
+    # Fallback banner (telemetry unavailable) — always first so the reader
+    # knows everything below is heuristic.
+    lines.extend(_fallback_banner(lang, profile.fallback_reason, width))
     lines.extend(_top_summary(profile, width, frame_color, lang, mode))
     lines.append(_ansi_row("", width, frame_color))
     lines.extend(_identity_block(profile, width, frame_color, lang, exp_bar, emblem, mode))
@@ -765,7 +954,12 @@ def _status_rows(profile: CharacterProfile, width: int, lang: str, mode: str) ->
     lines.append(
         _ansi_row(_ansi_section(i18n.t_section(lang, "vitals"), width - 2, ANSI["ice"]), width, frame_color)
     )
-    for _, label, current, maximum, hint in _compute_vitals(profile):
+    vitals = (
+        _compute_telemetry_vitals(profile, telemetry)
+        if telemetry is not None
+        else _compute_vitals(profile)
+    )
+    for _, label, current, maximum, hint in vitals:
         ratio = current / maximum if maximum else 0
         bar = _ansi(
             _bar(current, maximum, width=bar_w, filled="▰", empty="▱"),
@@ -794,6 +988,9 @@ def _status_rows(profile: CharacterProfile, width: int, lang: str, mode: str) ->
             frame_color,
         )
     )
+    # Telemetry-only vitals (Focus / Overheat / Gold).
+    if telemetry is not None:
+        lines.extend(_telemetry_side_rows(telemetry, width, lang))
 
     lines.append(_ansi_row("", width, frame_color))
     lines.append(
@@ -811,12 +1008,61 @@ def _status_rows(profile: CharacterProfile, width: int, lang: str, mode: str) ->
         right = f"{_ansi(r_label, ANSI['bold'], ANSI['white'])} {rv:>2} {rb} [{_ansi(rt, ANSI['bold'], _tier_color(rt))}]"
         lines.append(_ansi_row(_pair(left, right, width), width, frame_color))
 
+    # Extended 6-attribute grid (Phase 2 additions) — only when telemetry
+    # populated the fields. Layout mirrors the base grid: 3 rows × 2 columns.
+    extended_available = all(
+        getattr(stats, attr_name) is not None for _, attr_name in _EXTENDED_STAT_LABELS
+    )
+    if extended_available:
+        ext_pairs = [
+            (_EXTENDED_STAT_LABELS[0], _EXTENDED_STAT_LABELS[1]),
+            (_EXTENDED_STAT_LABELS[2], _EXTENDED_STAT_LABELS[3]),
+            (_EXTENDED_STAT_LABELS[4], _EXTENDED_STAT_LABELS[5]),
+        ]
+        for (l_key, l_attr), (r_key, r_attr) in ext_pairs:
+            lv = getattr(stats, l_attr) or 0
+            rv = getattr(stats, r_attr) or 0
+            lt = _stat_tier(lv)
+            rt = _stat_tier(rv)
+            lb = _ansi(_bar(lv, width=10, filled="■", empty="·"), ANSI["bold"], _tier_color(lt))
+            rb = _ansi(_bar(rv, width=10, filled="■", empty="·"), ANSI["bold"], _tier_color(rt))
+            l_label = i18n.t_label(lang, l_key)
+            r_label = i18n.t_label(lang, r_key)
+            left = f"{_ansi(l_label, ANSI['bold'], ANSI['white'])} {lv:>2} {lb} [{_ansi(lt, ANSI['bold'], _tier_color(lt))}]"
+            right = f"{_ansi(r_label, ANSI['bold'], ANSI['white'])} {rv:>2} {rb} [{_ansi(rt, ANSI['bold'], _tier_color(rt))}]"
+            lines.append(_ansi_row(_pair(left, right, width), width, frame_color))
+    elif telemetry is None:
+        # Flag extended grid as "unavailable" when falling back; makes the
+        # reason discoverable without digging into documentation.
+        lines.append(
+            _ansi_row(
+                _ansi(
+                    f"· {i18n.t_label(lang, 'stat_no_telemetry')}",
+                    ANSI["dim"],
+                    ANSI["gray"],
+                ),
+                width,
+                frame_color,
+            )
+        )
+
     return lines
 
 
-def _equipment_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _equipment_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,
+) -> list[str]:
+    """Phase 3 W3.1 — 4-slot layout driven by ``profile.equipment``.
+
+    Falls back to the classic 3-plugin slot view when equipment is absent
+    (e.g. fully synthetic test profile).
+    """
     frame_color = _frame_color()
     scan = profile.scan
+    equipment = profile.equipment
     lines: list[str] = [
         _ansi_row(
             _ansi_section(i18n.t_section(lang, "equipment"), width - 2, ANSI["gold"]),
@@ -824,6 +1070,84 @@ def _equipment_rows(profile: CharacterProfile, width: int, lang: str) -> list[st
             frame_color,
         )
     ]
+    # 4-slot telemetry view: MAIN WEAPON · ARMOR · TRINKETS · HOTBAR.
+    if equipment is not None:
+        main = _safe_text(equipment.main_weapon, i18n.t_label(lang, "equip_unknown"))
+        main_color = ANSI["white"] if equipment.main_weapon else ANSI["dim"]
+        lines.append(
+            _ansi_row(
+                f"{_ansi('◆ ' + i18n.t_label(lang, 'equip_main_weapon'), ANSI['bold'], ANSI['gold'])}  "
+                f"{_ansi(main, ANSI['bold'], main_color)}",
+                width,
+                frame_color,
+            )
+        )
+        armor = (
+            ", ".join(_safe_text(s) for s in equipment.armor_slots[:5])
+            if equipment.armor_slots
+            else "—"
+        )
+        lines.append(
+            _ansi_row(
+                f"{_ansi('◇ ' + i18n.t_label(lang, 'equip_armor'), ANSI['bold'], ANSI['ice'])}  "
+                f"{_ansi(armor, ANSI['white'])}",
+                width,
+                frame_color,
+            )
+        )
+        trinkets = (
+            ", ".join(_safe_text(t) for t in equipment.trinkets[:5])
+            if equipment.trinkets
+            else "—"
+        )
+        lines.append(
+            _ansi_row(
+                f"{_ansi('✦ ' + i18n.t_label(lang, 'equip_trinkets'), ANSI['bold'], ANSI['lavender'])}  "
+                f"{_ansi(trinkets, ANSI['white'])}",
+                width,
+                frame_color,
+            )
+        )
+        lines.append(
+            _ansi_row(
+                _ansi(
+                    f"▾ {i18n.t_label(lang, 'equip_hotbar')}",
+                    ANSI["bold"],
+                    ANSI["soft"],
+                ),
+                width,
+                frame_color,
+            )
+        )
+        if equipment.hotbar:
+            max_hits = max(t.invocation_count for t in equipment.hotbar) or 1
+            for tool in equipment.hotbar[:5]:
+                bar = _ansi(
+                    _bar(tool.invocation_count, max_hits, width=12, filled="▰", empty="▱"),
+                    ANSI["bold"],
+                    ANSI["lavender"],
+                )
+                name = _pad_to(
+                    _ansi(_safe_text(tool.tool_name), ANSI["white"]),
+                    14,
+                )
+                count = _ansi(f"{tool.invocation_count:>4}", ANSI["bold"], ANSI["white"])
+                lines.append(_ansi_row(f"    {name}{bar} {count}", width, frame_color))
+        else:
+            lines.append(
+                _ansi_row(
+                    _ansi(
+                        f"    {i18n.t_label(lang, 'equip_no_data')}",
+                        ANSI["dim"],
+                        ANSI["gray"],
+                    ),
+                    width,
+                    frame_color,
+                )
+            )
+        return lines
+
+    # Legacy 3-slot view (no telemetry) — parity with pre-Phase-3 behaviour.
     slot_specs = [("main_slot", "main_hint", "◆"), ("aux_slot", "aux_hint", "◇"), ("sigil_slot", "sigil_hint", "✦")]
     show_hints = width >= 70
     for index, (slot_key, hint_key, glyph) in enumerate(slot_specs):
@@ -854,7 +1178,12 @@ def _equipment_rows(profile: CharacterProfile, width: int, lang: str) -> list[st
     return lines
 
 
-def _codex_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _codex_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,  # noqa: ARG001 — codex stays scanner-sourced
+) -> list[str]:
     frame_color = _frame_color()
     scan = profile.scan
     lines: list[str] = [
@@ -900,7 +1229,13 @@ def _codex_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
     return lines
 
 
-def _journal_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _journal_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,
+) -> list[str]:
+    """Phase 3 W3.1 — telemetry-backed recent-session table with fallback."""
     frame_color = _frame_color()
     scan = profile.scan
     lines: list[str] = [
@@ -910,16 +1245,64 @@ def _journal_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]
             frame_color,
         )
     ]
-    # Phase 1 fallback: list recent session stems only (Phase 3 enriches from state.db).
+    if telemetry is not None and telemetry.recent_sessions:
+        lines.append(
+            _ansi_row(
+                _ansi(
+                    f"· {i18n.t_label(lang, 'journal_cols')}",
+                    ANSI["dim"],
+                    ANSI["gray"],
+                ),
+                width,
+                frame_color,
+            )
+        )
+        for session in telemetry.recent_sessions[:10]:
+            model = _safe_text(session.model, i18n.t_label(lang, "equip_unknown"))
+            model_text = _pad_to(_ansi(model, ANSI["bold"], ANSI["white"]), 18)
+            tokens = session.total_tokens
+            cost = (
+                f"${session.estimated_cost_usd:.4f}"
+                if session.estimated_cost_usd is not None
+                else "  —"
+            )
+            end_label = _end_reason_label(session.end_reason, lang)
+            end_color = ANSI["red"] if session.end_reason == "compression" else ANSI["soft"]
+            line = (
+                f"  {model_text}"
+                f"{_ansi(f'{tokens:>8,}', ANSI['ice'])}  "
+                f"{_ansi(f'{cost:>10}', ANSI['gold'])}  "
+                f"{_ansi(end_label, end_color)}"
+            )
+            lines.append(_ansi_row(line, width, frame_color))
+        return lines
+
+    # Fallback — file-scanner session stems only.
     if scan.recent_sessions:
         for name in scan.recent_sessions[:10]:
             lines.append(_ansi_row(_ansi(f"· {name}", ANSI["soft"]), width, frame_color))
     else:
-        lines.append(_ansi_row(_ansi("· (none)", ANSI["dim"], ANSI["gray"]), width, frame_color))
+        lines.append(
+            _ansi_row(
+                _ansi(
+                    f"· {i18n.t_label(lang, 'journal_no_data')}",
+                    ANSI["dim"],
+                    ANSI["gray"],
+                ),
+                width,
+                frame_color,
+            )
+        )
     return lines
 
 
-def _chronicle_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _chronicle_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,
+) -> list[str]:
+    """Phase 3 W3.1 — lifetime-token aggregates with fallback to scan stats."""
     frame_color = _frame_color()
     scan = profile.scan
     lines: list[str] = [
@@ -929,6 +1312,90 @@ def _chronicle_rows(profile: CharacterProfile, width: int, lang: str) -> list[st
             frame_color,
         )
     ]
+    if telemetry is not None:
+        tokens = telemetry.lifetime_tokens
+        parts = (
+            ("chronicle_input", tokens.input_tokens),
+            ("chronicle_output", tokens.output_tokens),
+            ("chronicle_cache_read", tokens.cache_read_tokens),
+            ("chronicle_cache_write", tokens.cache_write_tokens),
+            ("chronicle_reasoning", tokens.reasoning_tokens),
+        )
+        lines.append(
+            _ansi_row(
+                _ansi_section(
+                    i18n.t_label(lang, "chronicle_lifetime_tokens"),
+                    width - 2,
+                    ANSI["ice"],
+                ),
+                width,
+                frame_color,
+            )
+        )
+        for key, count in parts:
+            label = _pad_to(_ansi(i18n.t_label(lang, key), ANSI["white"]), 16)
+            val = _ansi(f"{count:>12,}", ANSI["bold"], ANSI["ice"])
+            lines.append(_ansi_row(f"  {label}{val}", width, frame_color))
+
+        cache_rate = tokens.cache_hit_rate
+        rate_bar = _ansi(
+            _bar(int(cache_rate * 100), 100, width=16, filled="▰", empty="▱"),
+            ANSI["bold"],
+            _vital_color(cache_rate),
+        )
+        lines.append(
+            _ansi_row(
+                f"  {_pad_to(_ansi(i18n.t_label(lang, 'chronicle_cache_rate'), ANSI['white']), 16)}"
+                f"{rate_bar} {_ansi(f'{cache_rate*100:>5.1f}%', ANSI['bold'], ANSI['white'])}",
+                width,
+                frame_color,
+            )
+        )
+        lines.append(
+            _ansi_row(
+                f"  {_pad_to(_ansi(i18n.t_label(lang, 'chronicle_cost_total'), ANSI['white']), 16)}"
+                f"{_ansi(f'${telemetry.lifetime_cost.total_usd:>11.4f}', ANSI['bold'], ANSI['gold'])}",
+                width,
+                frame_color,
+            )
+        )
+        lines.append(
+            _ansi_row(
+                f"  {_pad_to(_ansi(i18n.t_label(lang, 'chronicle_parent_depth'), ANSI['white']), 16)}"
+                f"{_ansi(f'{telemetry.parent_chain_max_depth:>12}', ANSI['bold'], ANSI['lavender'])}",
+                width,
+                frame_color,
+            )
+        )
+
+        if telemetry.model_usage:
+            lines.append(_ansi_row("", width, frame_color))
+            lines.append(
+                _ansi_row(
+                    _ansi_section(
+                        i18n.t_label(lang, "chronicle_per_model"),
+                        width - 2,
+                        ANSI["lavender"],
+                    ),
+                    width,
+                    frame_color,
+                )
+            )
+            max_usage = max(telemetry.model_usage.values()) or 1
+            for model, count in sorted(
+                telemetry.model_usage.items(), key=lambda kv: (-kv[1], kv[0])
+            )[:6]:
+                label = _pad_to(_ansi(_safe_text(model), ANSI["white"]), 20)
+                bar = _ansi(
+                    _bar(count, max_usage, width=14, filled="▰", empty="▱"),
+                    ANSI["bold"],
+                    ANSI["lavender"],
+                )
+                count_text = _ansi(f"{count:>4}", ANSI["bold"], ANSI["white"])
+                lines.append(_ansi_row(f"  {label}{bar} {count_text}", width, frame_color))
+        return lines
+
+    # Fallback — scan-derived activity counters.
     lines.append(
         _ansi_row(
             _pair(
@@ -963,10 +1430,31 @@ def _chronicle_rows(profile: CharacterProfile, width: int, lang: str) -> list[st
             frame_color,
         )
     )
+    lines.append(
+        _ansi_row(
+            _ansi(
+                f"· {i18n.t_label(lang, 'chronicle_no_data')}",
+                ANSI["dim"],
+                ANSI["gray"],
+            ),
+            width,
+            frame_color,
+        )
+    )
     return lines
 
 
-def _rituals_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _rituals_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,  # noqa: ARG001 — ritual data stays scanner-sourced in v0.2
+) -> list[str]:
+    """Rituals (cron) tab. Telemetry is accepted for signature parity but
+    cron entries are file-scanner-sourced (state.db has no cron table in v6).
+    The "next run" line is a static label because the spec explicitly rejects
+    a live countdown (ralplan W5.4 / Critic req #7).
+    """
     frame_color = _frame_color()
     scan = profile.scan
     lines: list[str] = [
@@ -987,10 +1475,27 @@ def _rituals_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]
             frame_color,
         )
     )
+    # Static "next run" label per W5.4 — no countdown.
+    lines.append(
+        _ansi_row(
+            _ansi(
+                f"· {i18n.t_label(lang, 'rituals_next_run')}: —",
+                ANSI["dim"],
+                ANSI["gray"],
+            ),
+            width,
+            frame_color,
+        )
+    )
     return lines
 
 
-def _effects_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _effects_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,  # noqa: ARG001 — effects derive from scanner-only buff_ids
+) -> list[str]:
     frame_color = _frame_color()
     lines: list[str] = [
         _ansi_row(
@@ -1035,7 +1540,18 @@ def _effects_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]
     return lines
 
 
-def _diagnostics_rows(profile: CharacterProfile, width: int, lang: str) -> list[str]:
+def _diagnostics_rows(
+    profile: CharacterProfile,
+    width: int,
+    lang: str,
+    telemetry: TelemetrySnapshot | None = None,
+) -> list[str]:
+    """Phase 3 W3.1 — end_reason histogram using the verified vocabulary.
+
+    Values outside the Appendix-B vocabulary (compression, cron_complete,
+    user_exit, session_reset, session_switch, new_session, resumed_other,
+    branched, cli_close, done) are bucketed into ``"other"``.
+    """
     frame_color = _frame_color()
     scan = profile.scan
     scar_color = ANSI["red"] if scan.activity.session_error_mentions else ANSI["gray"]
@@ -1057,6 +1573,102 @@ def _diagnostics_rows(profile: CharacterProfile, width: int, lang: str) -> list[
             frame_color,
         )
     )
+
+    if telemetry is not None:
+        histogram: dict[str, int] = {}
+        stale_count = 0
+        for session in telemetry.recent_sessions:
+            if session.ended_at is None:
+                stale_count += 1
+            reason = session.end_reason
+            if reason and reason in _END_REASON_KEYS:
+                key = reason
+            elif reason is None or reason == "":
+                key = "__open__"
+            else:
+                key = "__other__"
+            histogram[key] = histogram.get(key, 0) + 1
+
+        lines.append(_ansi_row("", width, frame_color))
+        lines.append(
+            _ansi_row(
+                _ansi_section(
+                    i18n.t_label(lang, "diag_end_reasons"),
+                    width - 2,
+                    ANSI["amber"],
+                ),
+                width,
+                frame_color,
+            )
+        )
+        if histogram:
+            max_count = max(histogram.values()) or 1
+            # Render in verified-vocabulary order first; "open" + "other" last.
+            ordered = [k for k in _END_REASON_KEYS if k in histogram]
+            tail = []
+            if "__open__" in histogram:
+                tail.append("__open__")
+            if "__other__" in histogram:
+                tail.append("__other__")
+            for key in ordered + tail:
+                count = histogram[key]
+                if key == "__open__":
+                    label_text = i18n.t_label(lang, "end_reason_open")
+                    color = ANSI["amber"]
+                elif key == "__other__":
+                    label_text = i18n.t_label(lang, "end_reason_other")
+                    color = ANSI["gray"]
+                else:
+                    label_text = i18n.t_label(lang, _END_REASON_KEYS[key])
+                    color = ANSI["red"] if key == "compression" else ANSI["soft"]
+                label = _pad_to(_ansi(label_text, ANSI["white"]), 18)
+                bar = _ansi(
+                    _bar(count, max_count, width=14, filled="▰", empty="▱"),
+                    ANSI["bold"],
+                    color,
+                )
+                count_text = _ansi(f"{count:>4}", ANSI["bold"], ANSI["white"])
+                lines.append(_ansi_row(f"  {label}{bar} {count_text}", width, frame_color))
+        else:
+            lines.append(
+                _ansi_row(
+                    _ansi(
+                        f"· {i18n.t_label(lang, 'diag_no_telemetry')}",
+                        ANSI["dim"],
+                        ANSI["gray"],
+                    ),
+                    width,
+                    frame_color,
+                )
+            )
+        lines.append(
+            _ansi_row(
+                f"  {_pad_to(_ansi(i18n.t_label(lang, 'diag_compression_events'), ANSI['white']), 26)}"
+                f"{_ansi(str(telemetry.compression_events), ANSI['bold'], ANSI['red'])}",
+                width,
+                frame_color,
+            )
+        )
+        lines.append(
+            _ansi_row(
+                f"  {_pad_to(_ansi(i18n.t_label(lang, 'diag_stale_sessions'), ANSI['white']), 26)}"
+                f"{_ansi(str(stale_count), ANSI['bold'], ANSI['amber'])}",
+                width,
+                frame_color,
+            )
+        )
+    else:
+        lines.append(
+            _ansi_row(
+                _ansi(
+                    f"· {i18n.t_label(lang, 'diag_no_telemetry')}",
+                    ANSI["dim"],
+                    ANSI["gray"],
+                ),
+                width,
+                frame_color,
+            )
+        )
     return lines
 
 
@@ -1093,17 +1705,39 @@ def _resolve_tab_width(width: int | None) -> int:
     return width or 78
 
 
+# Sentinel used so callers can disambiguate "I don't care, use the profile's
+# telemetry" (omit the kwarg → _UNSET) from "I explicitly want no telemetry
+# even if the profile carries one" (pass telemetry=None).
+_TELEMETRY_UNSET: TelemetrySnapshot = object()  # type: ignore[assignment]
+
+
+def _effective_telemetry(
+    profile: CharacterProfile,
+    telemetry: TelemetrySnapshot | None,
+) -> TelemetrySnapshot | None:
+    """Resolve the final telemetry used during rendering.
+
+    * ``telemetry is _TELEMETRY_UNSET`` → fall back to ``profile.telemetry``.
+    * ``telemetry is None``             → explicitly suppress telemetry.
+    * ``telemetry is TelemetrySnapshot`` → use it directly.
+    """
+    if telemetry is _TELEMETRY_UNSET:
+        return profile.telemetry
+    return telemetry
+
+
 def render_status_tab(
     profile: CharacterProfile,
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001  -- Phase 3 populates
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
     mode = _resolve_banner_mode(width, "auto")
-    rows = _status_rows(profile, width, lang, mode)
+    tele = _effective_telemetry(profile, telemetry)
+    rows = _status_rows(profile, width, lang, mode, telemetry=tele)
     rows.append(_ansi_row("", width, _frame_color()))
     rows.extend(_realm_rows(profile, width, lang))
     return "\n".join(rows)
@@ -1114,11 +1748,12 @@ def render_equipment_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_equipment_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_equipment_rows(profile, width, lang, telemetry=tele))
 
 
 def render_codex_tab(
@@ -1126,11 +1761,12 @@ def render_codex_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_codex_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_codex_rows(profile, width, lang, telemetry=tele))
 
 
 def render_journal_tab(
@@ -1138,11 +1774,12 @@ def render_journal_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_journal_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_journal_rows(profile, width, lang, telemetry=tele))
 
 
 def render_chronicle_tab(
@@ -1150,11 +1787,12 @@ def render_chronicle_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_chronicle_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_chronicle_rows(profile, width, lang, telemetry=tele))
 
 
 def render_rituals_tab(
@@ -1162,11 +1800,12 @@ def render_rituals_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_rituals_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_rituals_rows(profile, width, lang, telemetry=tele))
 
 
 def render_effects_tab(
@@ -1174,11 +1813,12 @@ def render_effects_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_effects_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_effects_rows(profile, width, lang, telemetry=tele))
 
 
 def render_diagnostics_tab(
@@ -1186,11 +1826,12 @@ def render_diagnostics_tab(
     *,
     width: int | None = None,
     lang: str | None = None,
-    telemetry: object | None = None,  # noqa: ARG001
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     width = _resolve_tab_width(width)
     lang = i18n.normalize_lang(lang or profile.lang)
-    return "\n".join(_diagnostics_rows(profile, width, lang))
+    tele = _effective_telemetry(profile, telemetry)
+    return "\n".join(_diagnostics_rows(profile, width, lang, telemetry=tele))
 
 
 _TAB_RENDERERS = {
@@ -1218,7 +1859,7 @@ def render_static_tabs_panel(
     profile: CharacterProfile,
     banner_mode: str = "auto",
     width: int | None = None,
-    telemetry: object | None = None,
+    telemetry: TelemetrySnapshot | None = _TELEMETRY_UNSET,
 ) -> str:
     """Render all 8 tabs concatenated for ``--format tabs`` static export.
 

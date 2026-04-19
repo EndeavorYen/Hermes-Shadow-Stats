@@ -167,12 +167,45 @@ In the best case, your first run should feel like this:
 
 ## Try it in 10 seconds
 
-### ANSI mode (primary)
+### Interactive TUI (v0.2.0+)
 
 ```bash
+# launch the 8-tab interactive Textual TUI (default on a TTY)
 hermes-shadow-stats
+
+# or explicitly
+hermes-shadow-stats --tui
+```
+
+Keys: `←/→` or `h/l` cycle tabs · `1`-`8` jump to tab · `Enter` drills into
+Detail (Journal/Chronicle/Codex/Rituals) · `Esc` backs out · `r`/F5 refreshes
+the snapshot · `?` shows help · `q` or `Ctrl+C` quits cleanly.
+
+The TUI pulls primary telemetry from `~/.hermes/state.db` (schema v6+, read-only)
+and falls back to the file scanner with a visible banner in the Status tab when
+the database is absent, schema-mismatched, or unreadable.
+
+### ANSI mode (static, legacy-compatible)
+
+```bash
+# legacy single-panel output, byte-identical to v0.1.x
+hermes-shadow-stats --no-tui
 # or
 hermes-shadow-stats --format ansi
+```
+
+### 8-tab static concat
+
+```bash
+# all 8 RPG tabs rendered to stdout (new in v0.2.0)
+hermes-shadow-stats --format tabs
+```
+
+### Theme
+
+```bash
+# v1 ships one built-in theme; more will land in v0.3
+hermes-shadow-stats --theme hermes-teal
 ```
 
 ### Banner modes for the CLI hero/logo

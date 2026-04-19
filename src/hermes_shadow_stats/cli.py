@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import sys
 from pathlib import Path
 
 from . import i18n
@@ -15,6 +16,7 @@ from .renderer import (
 from .scanner import scan_hermes_home
 from .state_db import load_telemetry
 from .stats import build_character_profile
+from .tui.themes import available_themes
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -58,7 +60,48 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip reading ~/.hermes/state.db; use file-scanner fallback only.",
     )
+    tui_group = parser.add_mutually_exclusive_group()
+    tui_group.add_argument(
+        "--tui",
+        dest="tui_mode",
+        action="store_const",
+        const="on",
+        help="Force the interactive TUI (requires a TTY).",
+    )
+    tui_group.add_argument(
+        "--no-tui",
+        dest="tui_mode",
+        action="store_const",
+        const="off",
+        help="Disable the TUI; use --format ansi single-panel output.",
+    )
+    parser.add_argument(
+        "--theme",
+        default="hermes-teal",
+        help=f"Theme preset for the TUI. Available: {', '.join(available_themes())}.",
+    )
     return parser
+
+
+def _resolve_tui_mode(args: argparse.Namespace) -> bool:
+    """Decide whether to launch the TUI.
+
+    Priority (plan W4.5):
+      1. Explicit ``--tui`` / ``--no-tui`` flag
+      2. A non-``ansi`` / non-default ``--format`` pins static output
+      3. Otherwise: launch TUI only when stdout is a TTY
+    """
+    explicit = getattr(args, "tui_mode", None)
+    if explicit == "on":
+        return True
+    if explicit == "off":
+        return False
+    # Any non-default format request is a static-output signal.
+    if args.format not in {"ansi"}:
+        return False
+    if args.output:
+        return False
+    return sys.stdout.isatty()
 
 
 def main() -> int:
@@ -69,7 +112,27 @@ def main() -> int:
     if not home.exists():
         parser.error(f"Hermes home does not exist: {home}")
 
+    # Validate --theme early so the error surfaces before we spawn the TUI.
+    if args.theme not in available_themes():
+        parser.error(
+            f"Unknown theme {args.theme!r}. Available: {', '.join(available_themes())}."
+        )
+
     lang = i18n.normalize_lang(args.lang) if args.lang else i18n.detect_lang()
+
+    if _resolve_tui_mode(args):
+        # Lazy import so `--format json` without textual installed would still
+        # run (textual is a hard dependency today, but keep the import local).
+        from .tui.app import run_tui
+
+        return run_tui(
+            home,
+            name=args.name,
+            lang=lang,
+            theme_name=args.theme,
+            use_state_db=not args.no_state_db,
+        )
+
     scan = scan_hermes_home(home)
 
     # Phase 2: hybrid data source — state.db primary, file scanner fallback.
